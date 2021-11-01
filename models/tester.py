@@ -95,9 +95,9 @@ def model_test(inputs, batch_size, n_his, n_pred, inf_mode, load_path='./output/
     test_graph = tf.Graph()
 
     with test_graph.as_default():
-        saver = tf.train.import_meta_graph(pjoin(f'{model_path}.meta'))
+        saver = tf.compat.v1.train.import_meta_graph(pjoin(f'{model_path}.meta'))
 
-    with tf.Session(graph=test_graph) as test_sess:
+    with tf.compat.v1.Session(graph=test_graph) as test_sess:
         saver.restore(test_sess, tf.train.latest_checkpoint(load_path))
         print(f'>> Loading saved model from {model_path} ...')
 

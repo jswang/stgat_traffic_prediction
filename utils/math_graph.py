@@ -77,10 +77,7 @@ def weight_matrix(file_path, sigma2=0.1, epsilon=0.5, scaling=True):
     :param scaling: bool, whether applies numerical scaling on W.
     :return: np.ndarray, [n_route, n_route].
     '''
-    try:
-        W = pd.read_csv(file_path, header=None).values
-    except FileNotFoundError:
-        print(f'ERROR: input file was not found in {file_path}.')
+    W = pd.read_csv(file_path, header=None).values
 
     # check whether W is a 0/1 matrix.
     if set(np.unique(W)) == {0, 1}:

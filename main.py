@@ -1,21 +1,14 @@
-# @Time     : Jan. 02, 2019 22:17
-# @Author   : Veritas YIN
-# @FileName : main.py
-# @Version  : 1.0
-# @Project  : Orion
-# @IDE      : PyCharm
-# @Github   : https://github.com/VeritasYin/Project_Orion
 
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 from os.path import join as pjoin
 
-import tensorflow as tf
+# import tensorflow as tf
 
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-tf.Session(config=config)
+# config = tf.compat.v1.ConfigProto()
+# config.gpu_options.allow_growth = True
+# tf.compat.v1.Session(config=config)
 
 from utils.math_graph import *
 from data_loader.data_utils import *
@@ -57,7 +50,7 @@ else:
 L = scaled_laplacian(W)
 # Alternative approximation method: 1st approx - first_approx(W, n).
 Lk = cheb_poly_approx(L, Ks, n)
-tf.add_to_collection(name='graph_kernel', value=tf.cast(tf.constant(Lk), tf.float32))
+# tf.compat.v1.add_to_collection(name='graph_kernel', value=tf.cast(tf.constant(Lk), tf.float32))
 
 # Data Preprocessing
 data_file = f'PeMSD7_V_{n}.csv'
@@ -65,6 +58,6 @@ n_train, n_val, n_test = 34, 5, 5
 PeMS = data_gen(pjoin('./dataset', data_file), (n_train, n_val, n_test), n, n_his + n_pred)
 print(f'>> Loading dataset with Mean: {PeMS.mean:.2f}, STD: {PeMS.std:.2f}')
 
-if __name__ == '__main__':
-    model_train(PeMS, blocks, args)
-    model_test(PeMS, PeMS.get_len('test'), n_his, n_pred, args.inf_mode)
+# if __name__ == '__main__':
+    # model_train(PeMS, blocks, args)
+    # model_test(PeMS, PeMS.get_len('test'), n_his, n_pred, args.inf_mode)
