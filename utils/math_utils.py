@@ -81,7 +81,7 @@ def evaluation(y, y_, x_stats):
     else:
         # multi_step case
         tmp_list = []
-        # y -> [time_step, batch_size, n_route, 1]
+        # y -> [time_step, batch_size, n_node, 1]
         y = np.swapaxes(y, 0, 1)
         # recursively call
         for i in range(y_.shape[0]):

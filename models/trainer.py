@@ -22,7 +22,7 @@ def model_train(inputs, blocks, args, sum_path='./output/tensorboard'):
     :param blocks: list, channel configs of st_conv blocks.
     :param args: instance of class argparse, args for training.
     '''
-    n, n_his, n_pred = args.n_route, args.n_his, args.n_pred
+    n, n_his, n_pred = args.n_node, args.n_his, args.n_pred
     Ks, Kt = args.ks, args.kt
     batch_size, epoch, inf_mode, opt = args.batch_size, args.epoch, args.inf_mode, args.opt
 

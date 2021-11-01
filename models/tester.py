@@ -19,13 +19,13 @@ def multi_pred(sess, y_pred, seq, batch_size, n_his, n_pred, step_idx, dynamic_b
     Multi_prediction function.
     :param sess: tf.Session().
     :param y_pred: placeholder.
-    :param seq: np.ndarray, [len_seq, n_frame, n_route, C_0].
+    :param seq: np.ndarray, [len_seq, n_frame, n_node, C_0].
     :param batch_size: int, the size of batch.
     :param n_his: int, size of historical records for training.
     :param n_pred: int, the length of prediction.
     :param step_idx: int or list, index for prediction slice.
     :param dynamic_batch: bool, whether changes the batch size in the last one if its length is less than the default.
-    :return y_ : tensor, 'sep' [len_inputs, n_route, 1]; 'merge' [step_idx, len_inputs, n_route, 1].
+    :return y_ : tensor, 'sep' [len_inputs, n_node, 1]; 'merge' [step_idx, len_inputs, n_node, 1].
             len_ : int, the length of prediction.
     '''
     pred_list = []
@@ -42,7 +42,7 @@ def multi_pred(sess, y_pred, seq, batch_size, n_his, n_pred, step_idx, dynamic_b
             test_seq[:, n_his - 1, :, :] = pred
             step_list.append(pred)
         pred_list.append(step_list)
-    #  pred_array -> [n_pred, batch_size, n_route, C_0)
+    #  pred_array -> [n_pred, batch_size, n_node, C_0)
     pred_array = np.concatenate(pred_list, axis=1)
     return pred_array[step_idx], pred_array.shape[1]
 
