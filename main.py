@@ -39,7 +39,7 @@ Ks, Kt = args.ks, args.kt
 # blocks: settings of channel size in st_conv_blocks / bottleneck design
 blocks = [[1, 32, 64], [64, 32, 128]]
 
-# Load wighted adjacency matrix W
+# Load weighted adjacency matrix W
 if args.graph == 'default':
     W = weight_matrix(pjoin('./dataset', f'PeMSD7_W_{n}.csv'))
 else:

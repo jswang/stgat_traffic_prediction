@@ -88,7 +88,9 @@ def weight_matrix(file_path, sigma2=0.1, epsilon=0.5, scaling=True):
         n = W.shape[0]
         W = W / 10000.
         W2, W_mask = W * W, np.ones([n, n]) - np.identity(n)
-        # refer to Eq.10
-        return np.exp(-W2 / sigma2) * (np.exp(-W2 / sigma2) >= epsilon) * W_mask
-    else:
-        return W
+        # refer to Eq. 20 in Graph Attention Network
+        W = np.exp(-W2 / sigma2) * (np.exp(-W2 / sigma2) >= epsilon) * W_mask
+        # Add self loop
+        W += np.identity(n)
+
+    return W
