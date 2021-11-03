@@ -137,7 +137,7 @@ def st_conv_block(x, Ks, Kt, channels, scope, keep_prob, act_func='GLU'):
     '''
     Spatio-temporal convolutional block, which contains two temporal gated convolution layers
     and one spatial graph convolution layer in the middle.
-    :param x: tensor, batch_size, time_step, n_node, c_in].
+    :param x: tensor, [batch_size, time_step, n_node, c_in].
     :param Ks: int, kernel size of spatial convolution.
     :param Kt: int, kernel size of temporal convolution.
     :param channels: list, channel configs of a single st_conv block.
@@ -156,6 +156,12 @@ def st_conv_block(x, Ks, Kt, channels, scope, keep_prob, act_func='GLU'):
     x_ln = layer_norm(x_o, f'layer_norm_{scope}')
     return tf.nn.dropout(x_ln, rate=1 - (keep_prob))
 
+def st_gat_layer(x, channels, K):
+    '''
+    Apply Multi-Layer Attention to Speed2Vec matrix layer. Then update attention adjacency matrices.
+    '''
+    # Also need to figure out how to use the GATConv class and make sure appropriate forward pass and messaging is conducted. 
+    pass
 
 def fully_con_layer(x, n, channel, scope):
     '''
@@ -214,3 +220,4 @@ def variable_summaries(var, v_name):
         tf.compat.v1.summary.scalar(f'min_{v_name}', tf.reduce_min(input_tensor=var))
 
         tf.compat.v1.summary.histogram(f'histogram_{v_name}', var)
+

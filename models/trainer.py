@@ -21,6 +21,9 @@ def model_train(inputs, blocks, args, sum_path='./output/tensorboard'):
     :param inputs: instance of class Dataset, data source for training.
     :param blocks: list, channel configs of st_conv blocks.
     :param args: instance of class argparse, args for training.
+
+    Notes on update to ST-GAT: use Adam Optimizer, 150 epochs and early stopping. 
+    Initial learning rate used is 2e^-4 with weight decap 5e^-4. Batch size  is 50.
     '''
     n, n_his, n_pred = args.n_node, args.n_his, args.n_pred
     Ks, Kt = args.ks, args.kt
