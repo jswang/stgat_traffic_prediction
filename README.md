@@ -2,7 +2,8 @@
 
 Notes, this repo is taken from the repo: Spatio-Temporal Graph Convolutional Networks: <br> A Deep Learning Framework for Traffic Forecasting
 
-The readme below comes from that repository
+The readme below comes from that repository. We will be adapting this code base to additionally build the model presented for a Spatio-Temporal GAT as introduced by Zhang et al in "Spatial-Temporal Graph Attention Networks:A Deep Learning Approach for Traffic Forecasting" https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8903252
+
 ## Introduction
 We propose a novel deep learning framework, **STGCN**, to tackle time series prediction problem in traffic domain. Instead of applying regular convolutional and recurrent units, we formulate the problem on graphs and build the model with complete convolutional structures. To the best of our knowledge, it is the first time that to apply purely convolutional structures to extract spatio-temporal features simultaneously from graph-structured time series in a traffic study.
 
