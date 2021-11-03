@@ -89,8 +89,3 @@ class STGAT:
         '''
 
         # applies activation functions to get the final embedding outputs in addition to dropout
-
-
-self, x: Union[Tensor, OptPairTensor], edge_index: Adj,
-                edge_attr: OptTensor = None, size: Size = None,
-                return_attention_weights=None):
