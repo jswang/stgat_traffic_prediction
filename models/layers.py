@@ -6,7 +6,9 @@
 # @Github   : https://github.com/VeritasYin/Project_Orion
 
 import tensorflow as tf
-
+import torch
+import torch.nn.functional as F
+from torch_geometric.nn import GATConv
 
 def gconv(x, theta, Ks, c_in, c_out):
     '''
@@ -156,11 +158,15 @@ def st_conv_block(x, Ks, Kt, channels, scope, keep_prob, act_func='GLU'):
     x_ln = layer_norm(x_o, f'layer_norm_{scope}')
     return tf.nn.dropout(x_ln, rate=1 - (keep_prob))
 
-def st_gat_layer(x, channels, K):
+def st_gat_layer(x, edge_index, channels, K):
     '''
     Apply Multi-Layer Attention to Speed2Vec matrix layer. Then update attention adjacency matrices.
+    We can go ahead and use the Pytorch implementation GATConv
     '''
     # Also need to figure out how to use the GATConv class and make sure appropriate forward pass and messaging is conducted. 
+    # (1) Figure out how to convert between Tensorflow and Pytorch for use of the STGAT class
+    # (2) Apply the ST-GAT
+    # (3) Update attentions
     pass
 
 def fully_con_layer(x, n, channel, scope):

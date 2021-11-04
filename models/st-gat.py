@@ -1,6 +1,36 @@
 import tensorflow as tf
+import torch
+import torch.nn.functional as F
+from torch_geometric.nn import GATConv
 
-class STGAT:
+
+class ST_GAT(torch.nn.geometric):
+
+    def __init__(self, in_channels, out_channels), heads=8, dropout=0.6):
+        super(ST_GAT, self).__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.heads = heads
+        self.dropout = dropout
+
+        #single graph attentional layer with 8 attention heads
+        self.conv1 = GATConv(in_channels, heads, heads, dropout, dropout)
+        
+    def forward(self, data):
+        x, edge_index = data.x, data.index
+        # apply dropout
+        x = F.dropout(x, self.dropout, training=self.training)
+        # conv 1
+        x = self.conv1(x, edge_index)
+        # apply Leaky RELU then softmax
+        x = F.LeakyReLU(x)
+        x = F.log_softmax(x, dim=1)
+
+        return x
+
+
+
+class STGAT: # legacy  -- to remove (we are going to use the pytorch implementation)
     '''
     STGAT block as described in Zhang et al's ST-GAT: Deep Learnign Approach for Traffic Forecasting.
     Multihead Attention adapted from the graph attentional operator from the `"Graph Attention Networks".
