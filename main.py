@@ -1,16 +1,21 @@
 #!/usr/bin/python3
 
+# @Time     : 11/7/21
+# @Author   : Julie Wang
+# @FileName : data_utils.py
+
 import os
 import numpy as np
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-from os.path import join as pjoin
 
 from utils.math_graph import *
 from data_loader.data_utils import *
+from data_loader.traffic_dataset import TrafficDataset
 from models.trainer import model_train
 from models.tester import model_test
 
+import torch
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -24,25 +29,33 @@ parser.add_argument('--lr', type=float, default=1e-3)
 parser.add_argument('--opt', type=str, default='RMSProp')
 parser.add_argument('--graph', type=str, default='default')
 parser.add_argument('--inf_mode', type=str, default='merge')
-
 args = parser.parse_args()
 print(f'Training configs: {args}')
 
+# Config that's passed around
+config = {
+    'C_BATCH_SIZE': 50,
+    'C_EPOCHS': 150,
+    'C_WEIGHT_DECAY': 5e-4,
+    'C_INITIAL_LR': 2e-4
+}
 
 # Load weighted adjacency matrix W
 if args.graph == 'default':
-    W = weight_matrix(pjoin('./dataset', f'PeMSD7_W_228.csv'))
+    W = weight_matrix(os.path.join('./dataset', f'PeMSD7_W_228.csv'))
 else:
     # load customized graph weight matrix
-    W = weight_matrix(pjoin('./dataset', args.graph))
+    W = weight_matrix(os.path.join('./dataset', args.graph))
 
-# Data Preprocessing
-data_file = f'PeMSD7_V_228.csv'
-# Splits to apply to data. TODO make configurable?
-splits = np.array([.6, .2, .2])
-PeMS = datagen(pjoin('./dataset', data_file), splits, args.n_his, args.n_pred)
-print(f'>> Loading dataset with Mean: {PeMS.mean:.2f}, STD: {PeMS.std:.2f}')
+# Data Preprocessing and loading
+# TODO make filename configurable
+data = pd.read_csv('./dataset/PeMSD7_V_228.csv', header=None).values
+dataset = TrafficDataset(data, args.n_his, args.n_pred)
+(train, val, test) = get_splits(dataset)
+# TODO i dont think this is how you're supposed to do it, there's a "get_idx_split()" function that's supposed to do something instead
+train_dataloader = torch.utils.data.DataLoader(train, batch_size=config.C_BATCH_SIZE, shuffle=True, num_workers=4)
+val_dataloader = torch.utils.data.DataLoader(val, batch_size=config.C_BATCH_SIZE, shuffle=True, num_workers=4)
+test_dataloader = torch.utils.data.DataLoader(test, batch_size=config.C_BATCH_SIZE, shuffle=True, num_workers=4)
 
-if __name__ == '__main__':
-    model_train(PeMS, args)
-    # model_test(PeMS, PeMS.get_len('test'), n_his, n_pred, args.inf_mode)
+model_train(train_dataloader, config)
+model_test(test_dataloader, config)

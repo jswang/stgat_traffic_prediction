@@ -14,19 +14,12 @@ import numpy as np
 import time
 import pandas as pd
 
-# Training Constants
-# TODO Maybe move these to a config file?
-C_WEIGHT_DECAY = 5e-4
-C_INITIAL_LR = 2e-4
-C_BATCH_SIZE = 50
-C_EPOCHS = 150
-
 def train(model, data, train_idx, optimizer, loss_fn):
     """
     Forward pass and backward pass on a model
     """
     model.train()
-    loss =0
+    loss=0
 
     optimizer.zero_grad()
     y_pred= model(data.x)
@@ -59,7 +52,7 @@ def test(model, data, split_idx, evaluator):
 
     return train_acc, valid_acc, test_acc
 
-def model_train(dataset, args):
+def model_train(train_dataset, val_dataset, config):
     """
     Train the ST-GAT model.
     """
@@ -68,19 +61,20 @@ def model_train(dataset, args):
 
     # If you use GPU, the device should be cuda
     print('Device: {}'.format(device))
-    data = dataset.to(device)
-    split_idx = dataset.get_idx_split()
+    data = train_dataset.to(device)
+    split_idx = train_dataset.get_idx_split()
     train_idx = split_idx['train'].to(device)
 
-    # dataset shape: T x F x N
-    model = ST_GAT(in_channels=dataset.shape[1::], out_channels=dataset.shape[1::])
-    optimizer = optim.Adam(args, lr=C_INITIAL_LR, weight_decay=C_WEIGHT_DECAY)
+    # train_dataset shape: T x F x N
+    model = ST_GAT(in_channels=train_dataset.shape[1::], out_channels=train_dataset.shape[1::])
+    # TODO not sure what this args should be?
+    optimizer = optim.Adam(lr=config.C_INITIAL_LR, weight_decay=config.C_WEIGHT_DECAY)
     loss_fn = torch.nn.MSELoss
 
     model.train()
-    for epoch in range(C_EPOCHS):
+    for epoch in range(config.C_EPOCHS):
         loss = train(model, data, train_idx, optimizer, loss_fn)
-        # TODO define the evaluator
+        # TODO define the evaluator!!
         train_acc, valid_acc, test_acc = test(model, data, split_idx, evaluator)
         # TODO add tensorboard to visualize training over time
         print(f'Epoch: {epoch:02d}, '
@@ -89,7 +83,7 @@ def model_train(dataset, args):
           f'Valid: {100 * valid_acc:.2f}% '
           f'Test: {100 * test_acc:.2f}%')
 
-def model_test(dataset, args):
+def model_test(dataset, config):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # If you use GPU, the device should be cuda
