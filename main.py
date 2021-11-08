@@ -16,8 +16,6 @@ import argparse
 parser = argparse.ArgumentParser()
 # F parameter
 parser.add_argument('--n_his', type=int, default=12)
-# T parameter. TODO not sure what this should start out as? what is this?
-parser.add_argument('--n_temporal', type=int, default=8)
 parser.add_argument('--n_pred', type=int, default=9)
 parser.add_argument('--batch_size', type=int, default=50)
 parser.add_argument('--epoch', type=int, default=50)
@@ -42,10 +40,9 @@ else:
 data_file = f'PeMSD7_V_228.csv'
 # Splits to apply to data. TODO make configurable?
 splits = np.array([.6, .2, .2])
-PeMS = datagen(pjoin('./dataset', data_file), splits, (args.n_temporal, args.n_his), args.n_pred)
+PeMS = datagen(pjoin('./dataset', data_file), splits, args.n_his, args.n_pred)
 print(f'>> Loading dataset with Mean: {PeMS.mean:.2f}, STD: {PeMS.std:.2f}')
 
 if __name__ == '__main__':
-    print("hello")
-    # model_train(PeMS, blocks, args)
+    model_train(PeMS, args)
     # model_test(PeMS, PeMS.get_len('test'), n_his, n_pred, args.inf_mode)

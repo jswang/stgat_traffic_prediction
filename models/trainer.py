@@ -6,102 +6,100 @@
 # @Github   : https://github.com/VeritasYin/Project_Orion
 
 from data_loader.data_utils import gen_batch
-from models.tester import model_inference
-from models.base_model import build_model, model_save
 from os.path import join as pjoin
-
-import tensorflow as tf
+from models.st_gat import ST_GAT
+import torch
+import torch.optim as optim
 import numpy as np
 import time
+import pandas as pd
 
+# Training Constants
+# TODO Maybe move these to a config file?
+C_WEIGHT_DECAY = 5e-4
+C_INITIAL_LR = 2e-4
+C_BATCH_SIZE = 50
+C_EPOCHS = 150
 
-def model_train(inputs, blocks, args, sum_path='./output/tensorboard'):
-    '''
-    Train the base model.
-    :param inputs: instance of class Dataset, data source for training.
-    :param blocks: list, channel configs of st_conv blocks.
-    :param args: instance of class argparse, args for training.
+def train(model, data, train_idx, optimizer, loss_fn):
+    """
+    Forward pass and backward pass on a model
+    """
+    model.train()
+    loss =0
 
-    Notes on update to ST-GAT: use Adam Optimizer, 150 epochs and early stopping. 
-    Initial learning rate used is 2e^-4 with weight decap 5e^-4. Batch size  is 50.
-    '''
-    n, n_his, n_pred = args.n_node, args.n_his, args.n_pred
-    Ks, Kt = args.ks, args.kt
-    batch_size, epoch, inf_mode, opt = args.batch_size, args.epoch, args.inf_mode, args.opt
+    optimizer.zero_grad()
+    y_pred= model(data.x)
+    loss = loss_fn(y_pred[train_idx], data.y[train_idx])
 
-    # Placeholder for model training
-    x = tf.compat.v1.placeholder(tf.float32, [None, n_his + 1, n, 1], name='data_input')
-    keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
+    loss.backward()
+    optimizer.step()
 
-    # Define model loss
-    train_loss, pred = build_model(x, n_his, Ks, Kt, blocks, keep_prob)
-    tf.compat.v1.summary.scalar('train_loss', train_loss)
-    copy_loss = tf.add_n(tf.compat.v1.get_collection('copy_loss'))
-    tf.compat.v1.summary.scalar('copy_loss', copy_loss)
+    return loss.item()
 
-    # Learning rate settings
-    global_steps = tf.Variable(0, trainable=False)
-    len_train = inputs.get_len('train')
-    if len_train % batch_size == 0:
-        epoch_step = len_train / batch_size
-    else:
-        epoch_step = int(len_train / batch_size) + 1
-    # Learning rate decay with rate 0.7 every 5 epochs.
-    lr = tf.compat.v1.train.exponential_decay(args.lr, global_steps, decay_steps=5 * epoch_step, decay_rate=0.7, staircase=True)
-    tf.compat.v1.summary.scalar('learning_rate', lr)
-    step_op = tf.compat.v1.assign_add(global_steps, 1)
-    with tf.control_dependencies([step_op]):
-        if opt == 'RMSProp':
-            train_op = tf.compat.v1.train.RMSPropOptimizer(lr).minimize(train_loss)
-        elif opt == 'ADAM':
-            train_op = tf.compat.v1.train.AdamOptimizer(lr).minimize(train_loss)
-        else:
-            raise ValueError(f'ERROR: optimizer "{opt}" is not defined.')
+@torch.no_grad()
+def test(model, data, split_idx, evaluator):
+    model.eval()
+    out = None
+    out = model(data.x)
+    y_pred = out
 
-    merged = tf.compat.v1.summary.merge_all()
+    train_acc = evaluator.eval({
+        'y_true': data.y[split_idx['train']],
+        'y_pred': y_pred[split_idx['train']],
+    })['acc']
+    valid_acc = evaluator.eval({
+        'y_true': data.y[split_idx['valid']],
+        'y_pred': y_pred[split_idx['valid']],
+    })['acc']
+    test_acc = evaluator.eval({
+        'y_true': data.y[split_idx['test']],
+        'y_pred': y_pred[split_idx['test']],
+    })['acc']
 
-    with tf.compat.v1.Session() as sess:
-        writer = tf.compat.v1.summary.FileWriter(pjoin(sum_path, 'train'), sess.graph)
-        sess.run(tf.compat.v1.global_variables_initializer())
+    return train_acc, valid_acc, test_acc
 
-        if inf_mode == 'sep':
-            # for inference mode 'sep', the type of step index is int.
-            step_idx = n_pred - 1
-            tmp_idx = [step_idx]
-            min_val = min_va_val = np.array([4e1, 1e5, 1e5])
-        elif inf_mode == 'merge':
-            # for inference mode 'merge', the type of step index is np.ndarray.
-            step_idx = tmp_idx = np.arange(3, n_pred + 1, 3) - 1
-            min_val = min_va_val = np.array([4e1, 1e5, 1e5] * len(step_idx))
-        else:
-            raise ValueError(f'ERROR: test mode "{inf_mode}" is not defined.')
+def model_train(dataset, args):
+    """
+    Train the ST-GAT model.
+    """
+    # Load and preprocess the data
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        for i in range(epoch):
-            start_time = time.time()
-            for j, x_batch in enumerate(
-                    gen_batch(inputs.get_data('train'), batch_size, dynamic_batch=True, shuffle=True)):
-                summary, _ = sess.run([merged, train_op], feed_dict={x: x_batch[:, 0:n_his + 1, :, :], keep_prob: 1.0})
-                writer.add_summary(summary, i * epoch_step + j)
-                if j % 50 == 0:
-                    loss_value = \
-                        sess.run([train_loss, copy_loss],
-                                 feed_dict={x: x_batch[:, 0:n_his + 1, :, :], keep_prob: 1.0})
-                    print(f'Epoch {i:2d}, Step {j:3d}: [{loss_value[0]:.3f}, {loss_value[1]:.3f}]')
-            print(f'Epoch {i:2d} Training Time {time.time() - start_time:.3f}s')
+    # If you use GPU, the device should be cuda
+    print('Device: {}'.format(device))
+    data = dataset.to(device)
+    split_idx = dataset.get_idx_split()
+    train_idx = split_idx['train'].to(device)
 
-            start_time = time.time()
-            min_va_val, min_val = \
-                model_inference(sess, pred, inputs, batch_size, n_his, n_pred, step_idx, min_va_val, min_val)
+    # dataset shape: T x F x N
+    model = ST_GAT(in_channels=dataset.shape[1::], out_channels=dataset.shape[1::])
+    optimizer = optim.Adam(args, lr=C_INITIAL_LR, weight_decay=C_WEIGHT_DECAY)
+    loss_fn = torch.nn.MSELoss
 
-            for ix in tmp_idx:
-                va, te = min_va_val[ix - 2:ix + 1], min_val[ix - 2:ix + 1]
-                print(f'Time Step {ix + 1}: '
-                      f'MAPE {va[0]:7.3%}, {te[0]:7.3%}; '
-                      f'MAE  {va[1]:4.3f}, {te[1]:4.3f}; '
-                      f'RMSE {va[2]:6.3f}, {te[2]:6.3f}.')
-            print(f'Epoch {i:2d} Inference Time {time.time() - start_time:.3f}s')
+    model.train()
+    for epoch in range(C_EPOCHS):
+        loss = train(model, data, train_idx, optimizer, loss_fn)
+        # TODO define the evaluator
+        train_acc, valid_acc, test_acc = test(model, data, split_idx, evaluator)
+        # TODO add tensorboard to visualize training over time
+        print(f'Epoch: {epoch:02d}, '
+          f'Loss: {loss:.4f}, '
+          f'Train: {100 * train_acc:.2f}%, '
+          f'Valid: {100 * valid_acc:.2f}% '
+          f'Test: {100 * test_acc:.2f}%')
 
-            if (i + 1) % args.save == 0:
-                model_save(sess, global_steps, 'STGCN')
-        writer.close()
-    print('Training model finished!')
+def model_test(dataset, args):
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    # If you use GPU, the device should be cuda
+    print('Device: {}'.format(device))
+    data = dataset.to(device)
+    split_idx = dataset.get_idx_split()
+    model = ST_GAT(in_channels=dataset.shape[1::], out_channels=dataset.shape[1::])
+    train_acc, valid_acc, test_acc = test(model, data, split_idx, evaluator)
+
+    print(f'Test:, '
+          f'Train: {100 * train_acc:.2f}%, '
+          f'Valid: {100 * valid_acc:.2f}% '
+          f'Test: {100 * test_acc:.2f}%')

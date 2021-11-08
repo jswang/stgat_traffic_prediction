@@ -56,13 +56,13 @@ def speed2vec(len_seq, data_seq, offset, n_frame, n_node, day_slot, C_0=1):
             tmp_seq[i * n_slot + j, :, :, :] = np.reshape(data_seq[sta:end, :], [n_frame, n_node, C_0])
     return tmp_seq
 
-
-def datagen(file_path, splits, output_config, n_pred, day_slot=288):
+# TODO figure out how to use the pytorch dataloader instead
+def datagen(file_path, splits, n_his, n_pred, day_slot=288):
     '''
     Source file load and dataset generation.
     :param file_path: str, the file path of data source.
     :param splits: array, dataset splits ratios: train, validation, test.
-    :param output_config: tuple, T length of temporal sequence, N number of nodes, F number of history timeslices
+    :param n_his: F, or the number of history timeslices
     :param n_pred: int, Number of timeslots to predict into future. n_pred = 9 (45 min into future).
     :param day_slot: int, the number of time slots per day, controlled by the time window (5 min as default). 24 hours * 60 min/hour / 5 min/slot
     :return: dict, dataset that contains training, validation and test with stats.
@@ -70,13 +70,14 @@ def datagen(file_path, splits, output_config, n_pred, day_slot=288):
 
     # generate training, validation and test data
     # The dataset is already linearly interpolated and cleaned up for us.
+    # (all timepoints) x N
     data_seq = pd.read_csv(file_path, header=None).values
 
     n_datapoints, n_node = data_seq.shape
-    n_temporal, n_his = output_config
 
     # The number of actual sequences you can make
     n_sequences = n_datapoints - (n_his + n_pred) + 1
+    # T x F x N
     sequences = np.zeros((n_sequences, n_his + n_pred, n_node))
     for i in range(n_sequences):
         sequences[i] = data_seq[i:i+n_his + n_pred, :]
@@ -88,7 +89,6 @@ def datagen(file_path, splits, output_config, n_pred, day_slot=288):
     train_dataset = sequences[0:splits[0]]
     val_dataset = sequences[splits[0]: splits[0] + splits[1]]
     test_dataset = sequences[splits[0] + splits[1]: -1]
-    # TODO: what do we do with n_temporal? It's unclear from the paper.
 
     # x_stats: dict, the stats for the train dataset, including the value of mean and standard deviation.
     train_stats = {'mean': np.mean(train_dataset), 'std': np.std(train_dataset)}
