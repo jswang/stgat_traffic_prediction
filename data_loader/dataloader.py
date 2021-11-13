@@ -10,14 +10,13 @@ class TrafficDataset(torch.utils.data.Dataset):
         self.std_dev = np.std(data)
         self.data = self.speed2vec(data, n_hist, n_pred)
 
+
     def speed2vec(self, data, n_hist, n_pred):
         """
         Given some data, figure out T, F, and N and populate self.sequences
-
-        Keyword arguments:
-        data -- Raw data to process
-        n_hist -- Number of timesteps in historical window to consider
-        n_pred -- Number of timestemps into the future to predict (ground truth)
+        :param data: Raw data to process
+        :param n_hist: Number of timesteps in historical window to consider
+        :param n_pred: Number of timestemps into the future to predict (ground truth)
         """
         self.n_datapoints, self.n_node = data.shape
         self.n_window = n_hist + n_pred
@@ -42,9 +41,7 @@ class TrafficDataset(torch.utils.data.Dataset):
     def __get_item__(self, index):
         """
         Generates one sample of data
-
-        Keyword arguments:
-        index -- Index of data to retreive
+        :param index: Index of data to retreive
         """
         data = self.sequences[index]
         data = (data - self.mean) / self.std_dev
@@ -52,13 +49,12 @@ class TrafficDataset(torch.utils.data.Dataset):
         y = data[self.n_hist::]
         return X,y
 
+
 def get_splits(dataset: TrafficDataset, splits):
     """
     Given the data, split it into random subsets of train, val, and test as given by splits
-
-    Keyword arguments:
-    dataset: TrafficeDataset object
-    splits: (train, val, test) ratios
+    :param dataset: TrafficeDataset object
+    :param splits: (train, val, test) ratios
     """
     split_train, split_val, split_test = splits
     train, test = train_test_split(dataset.data, test_size=split_train, random_state=1)

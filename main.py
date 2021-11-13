@@ -2,7 +2,7 @@
 
 # @Time     : 11/7/21
 # @Author   : Julie Wang
-# @FileName : data_utils.py
+# @FileName : main.py
 
 import os
 import numpy as np
@@ -10,7 +10,7 @@ import numpy as np
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 from utils.math_graph import *
-from data_loader.traffic_dataset import TrafficDataset, get_splits
+from data_loader.dataloader import TrafficDataset, get_splits
 from models.trainer import model_train
 from models.tester import model_test
 
