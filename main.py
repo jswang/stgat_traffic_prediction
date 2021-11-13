@@ -55,7 +55,7 @@ def main():
 
     # Data Preprocessing and loading
     data = pd.read_csv(os.path.join('./dataset', args.graph_data + '.csv'), header=None).values
-    dataset = TrafficDataset(data, args.n_his, args.n_pred)
+    dataset = TrafficDataset(data, W, args.n_his, args.n_pred)
     (train, val, test) = get_splits(dataset, (0.6, 0.2, 0.2))
     train_dataloader = torch.utils.data.DataLoader(train, batch_size=config['C_BATCH_SIZE'], shuffle=True)
     val_dataloader = torch.utils.data.DataLoader(val, batch_size=config['C_BATCH_SIZE'], shuffle=True)

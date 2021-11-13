@@ -13,8 +13,15 @@ class ST_GAT(torch.nn.Module):
         self.heads = heads
         self.dropout = dropout
 
-        #single graph attentional layer with 8 attention heads
+        # single graph attentional layer with 8 attention heads
         self.conv1 = GATConv(in_channels, heads, heads, dropout, dropout)
+
+        # add two LSTM layers
+        self.lstm1 = torch.nn.LSTM(embedding_dim, hidden_dim)
+        self.lstm2 = torch.nn.LSTM(embedding_dim, hidden_dim)
+
+        # fully-connected neural network
+        self.linear = torch.nn.linear(in_features, out_features)
 
     def forward(self, data):
         x, edge_index = data.x, data.index
@@ -25,6 +32,13 @@ class ST_GAT(torch.nn.Module):
         # apply Leaky RELU then softmax
         x = F.LeakyReLU(x)
         x = F.log_softmax(x, dim=1)
+
+        # RNN: 2 LSTM
+        x = self.lstm1()
+        x = self.lstm2()
+
+        # final output layer
+        x = self.linear()
 
         return x
 
