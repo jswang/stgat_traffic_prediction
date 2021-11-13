@@ -5,7 +5,6 @@
 # @IDE      : PyCharm
 # @Github   : https://github.com/VeritasYin/Project_Orion
 
-from data_loader.data_utils import gen_batch
 from utils.math_utils import evaluation
 from os.path import join as pjoin
 

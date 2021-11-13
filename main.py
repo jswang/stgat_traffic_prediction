@@ -10,8 +10,7 @@ import numpy as np
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 from utils.math_graph import *
-from data_loader.data_utils import *
-from data_loader.traffic_dataset import TrafficDataset
+from data_loader.traffic_dataset import TrafficDataset, get_splits
 from models.trainer import model_train
 from models.tester import model_test
 
@@ -52,10 +51,9 @@ else:
 data = pd.read_csv('./dataset/PeMSD7_V_228.csv', header=None).values
 dataset = TrafficDataset(data, args.n_his, args.n_pred)
 (train, val, test) = get_splits(dataset)
-# TODO i dont think this is how you're supposed to do it, there's a "get_idx_split()" function that's supposed to do something instead
-train_dataloader = torch.utils.data.DataLoader(train, batch_size=config.C_BATCH_SIZE, shuffle=True, num_workers=4)
-val_dataloader = torch.utils.data.DataLoader(val, batch_size=config.C_BATCH_SIZE, shuffle=True, num_workers=4)
-test_dataloader = torch.utils.data.DataLoader(test, batch_size=config.C_BATCH_SIZE, shuffle=True, num_workers=4)
+train_dataloader = torch.utils.data.DataLoader(train, batch_size=config['C_BATCH_SIZE'], shuffle=True)
+val_dataloader = torch.utils.data.DataLoader(val, batch_size=config['C_BATCH_SIZE'], shuffle=True)
+test_dataloader = torch.utils.data.DataLoader(test, batch_size=config['C_BATCH_SIZE'], shuffle=True)
 
 model_train(train_dataloader, config)
 model_test(test_dataloader, config)
