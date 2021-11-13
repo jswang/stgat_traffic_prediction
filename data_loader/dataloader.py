@@ -1,32 +1,65 @@
 import torch
 import numpy as np
-
+from torch_geometric.data import InMemoryDataset, Data
 from sklearn.model_selection import train_test_split
 
 
-class TrafficDataset(torch.utils.data.Dataset):
-    def __init__(self, data, n_hist, n_pred):
+class TrafficDataset(InMemoryDataset):
+    def __init__(self, data, W, n_hist, n_pred):
         self.mean = np.mean(data)
         self.std_dev = np.std(data)
-        self.data = self.speed2vec(data, n_hist, n_pred)
+        self.data = self.speed2vec(W, data, n_hist, n_pred)
 
 
-    def speed2vec(self, data, n_hist, n_pred):
+    def speed2vec(self, W, data, n_hist, n_pred):
         """
         Given some data, figure out T, F, and N and populate self.sequences
+        :param W: Weight matrix
         :param data: Raw data to process
         :param n_hist: Number of timesteps in historical window to consider
         :param n_pred: Number of timestemps into the future to predict (ground truth)
         """
         self.n_datapoints, self.n_node = data.shape
         self.n_window = n_hist + n_pred
-
         # The number of actual sequences you can make
         n_sequences = self.n_datapoints - self.n_window + 1
+
+        # manipulate nxn matrix into 2xnum_edges
+        edge_index = np.zeros((2, self.n_node**2))
+        # create an edge_attr matrix with our weights  (num_edges x 1) --> our edge features are dim 1
+        edge_attr = np.zeros((self.n_node**2, 1)) # TODO should this be 1-dim?
+        num_edges = 0
+        for i in range(self.n_node):
+            for j in range(self.n_node):
+                if W[i, j] != 0.:
+                    edge_index[0, num_edges] = i
+                    edge_index[1, num_edges] = j
+                    edge_attr[num_edges] = W[i, j]
+                    num_edges += 1
+        edge_index = np.resize(edge_index, (2, num_edges))
+        edge_attr = np.resize(edge_attr, (num_edges, 1))
+
         # T x F x N
-        sequences = np.zeros((n_sequences, self.n_window, self.n_node))
-        for i in range(n_sequences):
-            sequences[i] = data[i:i+self.n_window, :]
+        # sequences = np.zeros((n_sequences, self.n_window, self.n_node))
+        for t in range(n_sequences):
+            # for each time point construct a different graph with data object
+            # Docs here: https://pytorch-geometric.readthedocs.io/en/latest/modules/data.html#torch_geometric.data.Data
+            g = Data()
+            g.__num_nodes__ = self.n_node
+
+            g.edge_index = torch.from_numpy(edge_index)
+            g.edge_attr  = torch.from_numpy(edge_attr)
+
+            # (F,N) switched to (N,F)
+            full_window = np.swapaxes(data[t:t+self.n_window, :], 0, 1)
+            g.x = full_window[:, 0:self.n_hist]
+            g.y = full_window[:, self.n_hist::]
+
+            # get node features using speed2vec
+
+        #TODO put graphs into a dataloader
+
+        # construct a node feature matrix using the sequences
 
         return sequences
 
@@ -35,7 +68,7 @@ class TrafficDataset(torch.utils.data.Dataset):
         """
         Total number of samples
         """
-        len(self.sequences)
+        len(self.data)
 
 
     def __get_item__(self, index):
