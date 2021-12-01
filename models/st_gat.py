@@ -17,11 +17,11 @@ class ST_GAT(torch.nn.Module):
         self.conv1 = GATConv(in_channels, heads, heads, dropout, dropout)
 
         # add two LSTM layers  
-        self.lstm1 = torch.nn.LSTM(embedding_dim, hidden_dim)
-        self.lstm2 = torch.nn.LSTM(embedding_dim, hidden_dim)
+        self.lstm1 = torch.nn.LSTM(in_channels, 32)
+        self.lstm2 = torch.nn.LSTM(32, 128)
 
         # fully-connected neural network
-        self.linear = torch.nn.linear(in_features, self.out_channels)
+        self.linear = torch.nn.linear(128, self.out_channels)
 
     def forward(self, data):
         x, edge_index = data.x, data.index
