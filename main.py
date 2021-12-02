@@ -77,7 +77,7 @@ def main():
     # Train model
     config['n_pred'] = args.n_pred
     config['n_hist'] = args.n_hist
-    config['n_node'] = 228 #TODO parameterize
+    config['n_node'] = 228 #TODO parameterize this better
     model_train(train_dataloader, val_dataloader, config)
     # Test model
     model_test(test_dataloader, config)
