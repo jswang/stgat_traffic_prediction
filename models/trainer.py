@@ -20,14 +20,11 @@ def train(model, device, dataloader, optimizer, loss_fn):
 
     for _, batch in enumerate(tqdm(dataloader, desc="Iteration")):
         batch = batch.to(device)
-        if batch.x.shape[0] == 1 or batch.batch[-1] == 0:
-            pass
-        else:
-            optimizer.zero_grad()
-            y_pred = torch.squeeze(model(batch))
-            loss = loss_fn(y_pred, torch.squeeze(batch.y).float())
-            loss.backward()
-            optimizer.step()
+        optimizer.zero_grad()
+        y_pred = torch.squeeze(model(batch))
+        loss = loss_fn(y_pred, torch.squeeze(batch.y).float())
+        loss.backward()
+        optimizer.step()
 
     return loss.item()
 
@@ -66,7 +63,9 @@ def model_train(train_dataloader, val_dataloader, config):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Make the model. TODO add RNN here
-    model = ST_GAT(in_channels=train_dataloader.dataset.shape[1::], out_channels=train_dataloader.dataset.shape[1::])
+    # each datapoint in the graph is 228 x12: N x F (N = # nodes, F = time window)
+    # TODO set number of in channels = F for now, what should the number of out channels?
+    model = ST_GAT(in_channels=train_dataloader.dataset[0].x.shape[1], out_channels=train_dataloader.dataset[0].x.shape[1])
     optimizer = optim.Adam(model.parameters(), lr=config['C_INITIAL_LR'], weight_decay=config['C_WEIGHT_DECAY'])
     loss_fn = torch.nn.MSELoss
 

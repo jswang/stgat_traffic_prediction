@@ -60,9 +60,9 @@ def main():
     dataset = TrafficDataset(data, W, args.n_his, args.n_pred)
     # Transfrom the dataset into train, validation, and test
     (train, val, test) = get_splits(dataset, (0.6, 0.2, 0.2))
-    train_dataloader = DataLoader(train, batch_size=32, shuffle=True)
-    val_dataloader = DataLoader(val, batch_size=32, shuffle=True)
-    test_dataloader = DataLoader(test, batch_size=32, shuffle=True)
+    train_dataloader = DataLoader(train, batch_size=50, shuffle=True)
+    val_dataloader = DataLoader(val, batch_size=50, shuffle=True)
+    test_dataloader = DataLoader(test, batch_size=50, shuffle=True)
     # Train model
     model_train(train_dataloader, val_dataloader, config)
     # Test model
