@@ -24,9 +24,9 @@ class TrafficDataset():
         n_sequences = self.n_datapoints - self.n_window + 1
 
         # manipulate nxn matrix into 2xnum_edges
-        edge_index = np.zeros((2, self.n_node**2))
+        edge_index = torch.zeros((2, self.n_node**2), dtype=torch.long)
         # create an edge_attr matrix with our weights  (num_edges x 1) --> our edge features are dim 1
-        edge_attr = np.zeros((self.n_node**2, 1)) # TODO should this be 1-dim?
+        edge_attr = np.zeros((self.n_node**2, 1)) # TODO make this natively tensor
         num_edges = 0
         for i in range(self.n_node):
             for j in range(self.n_node):
@@ -35,7 +35,7 @@ class TrafficDataset():
                     edge_index[1, num_edges] = j
                     edge_attr[num_edges] = W[i, j]
                     num_edges += 1
-        edge_index = np.resize(edge_index, (2, num_edges))
+        edge_index = edge_index.resize_(2, num_edges)
         edge_attr = np.resize(edge_attr, (num_edges, 1))
 
         sequences = []
@@ -46,7 +46,7 @@ class TrafficDataset():
             g = Data()
             g.__num_nodes__ = self.n_node
 
-            g.edge_index = torch.from_numpy(edge_index)
+            g.edge_index = edge_index
             g.edge_attr  = torch.from_numpy(edge_attr)
 
             # (F,N) switched to (N,F)

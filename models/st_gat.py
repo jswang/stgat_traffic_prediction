@@ -31,7 +31,7 @@ class ST_GAT(torch.nn.Module):
         # gat layer
         x = self.gat(x, edge_index)
         # apply Leaky RELU then softmax
-        x = F.LeakyReLU(x)
+        x = F.leaky_relu(x)
         x = F.log_softmax(x, dim=1)
 
         # RNN: 2 LSTM
