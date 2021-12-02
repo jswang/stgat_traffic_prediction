@@ -13,6 +13,7 @@ from utils.math_graph import *
 from data_loader.dataloader import TrafficDataset, get_splits
 from models.trainer import model_train
 from models.tester import model_test
+from torch_geometric.loader import DataLoader
 
 import torch
 import argparse
@@ -55,16 +56,21 @@ def main():
 
     # Data Preprocessing and loading
     data = pd.read_csv(os.path.join('./dataset', args.graph_data + '.csv'), header=None).values
+    # right now just one big dataset
     dataset = TrafficDataset(data, W, args.n_his, args.n_pred)
-    (train, val, test) = get_splits(dataset, (0.6, 0.2, 0.2))
-    train_dataloader = torch.utils.data.DataLoader(train, batch_size=config['C_BATCH_SIZE'], shuffle=True)
-    val_dataloader = torch.utils.data.DataLoader(val, batch_size=config['C_BATCH_SIZE'], shuffle=True)
-    test_dataloader = torch.utils.data.DataLoader(test, batch_size=config['C_BATCH_SIZE'], shuffle=True)
+    # Transfrom the dataset into train, validation, and test
+    # (train, val, test) = get_splits(dataset, (0.6, 0.2, 0.2))
+    # train_dataloader = torch.utils.data.DataLoader(train, batch_size=config['C_BATCH_SIZE'], shuffle=True)
+    # val_dataloader = torch.utils.data.DataLoader(val, batch_size=config['C_BATCH_SIZE'], shuffle=True)
+    # test_dataloader = torch.utils.data.DataLoader(test, batch_size=config['C_BATCH_SIZE'], shuffle=True)
 
+    train_dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+    # todo figure out how to do splits right, for now made val dataloader the same
+    val_dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
     # Train model
     model_train(train_dataloader, val_dataloader, config)
     # Test model
-    model_test(test_dataloader, config)
+    # model_test(test_dataloader, config)
 
 if __name__ == "__main__":
     main()

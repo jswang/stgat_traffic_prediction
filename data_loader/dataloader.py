@@ -3,17 +3,18 @@ import numpy as np
 from torch_geometric.data import InMemoryDataset, Data
 from sklearn.model_selection import train_test_split
 
-
+#Given the original data, come up with one big dataset.
 class TrafficDataset(InMemoryDataset):
-    def __init__(self, data, W, n_hist, n_pred):
+    def __init__(self, data, W, n_hist, n_pred, transform=None, pre_transform=None):
+        super().__init__(transform, pre_transform)
         self.mean = np.mean(data)
         self.std_dev = np.std(data)
-        self.data = self.speed2vec(W, data, n_hist, n_pred)
-
+        sequences = self.speed2vec(W, data, n_hist, n_pred)
+        self.data, self.slices = self.collate(sequences)
 
     def speed2vec(self, W, data, n_hist, n_pred):
         """
-        Given some data, figure out T, F, and N and populate self.sequences
+        Given some data, figure out T, F, and N and return graphs for F timewindow
         :param W: Weight matrix
         :param data: Raw data to process
         :param n_hist: Number of timesteps in historical window to consider
@@ -39,8 +40,8 @@ class TrafficDataset(InMemoryDataset):
         edge_index = np.resize(edge_index, (2, num_edges))
         edge_attr = np.resize(edge_attr, (num_edges, 1))
 
+        sequences = []
         # T x F x N
-        # sequences = np.zeros((n_sequences, self.n_window, self.n_node))
         for t in range(n_sequences):
             # for each time point construct a different graph with data object
             # Docs here: https://pytorch-geometric.readthedocs.io/en/latest/modules/data.html#torch_geometric.data.Data
@@ -52,14 +53,9 @@ class TrafficDataset(InMemoryDataset):
 
             # (F,N) switched to (N,F)
             full_window = np.swapaxes(data[t:t+self.n_window, :], 0, 1)
-            g.x = full_window[:, 0:self.n_hist]
-            g.y = full_window[:, self.n_hist::]
-
-            # get node features using speed2vec
-
-        #TODO put graphs into a dataloader
-
-        # construct a node feature matrix using the sequences
+            g.x = full_window[:, 0:n_hist]
+            g.y = full_window[:, n_hist::]
+            sequences += [g]
 
         return sequences
 
@@ -83,15 +79,16 @@ class TrafficDataset(InMemoryDataset):
         return X,y
 
 
-def get_splits(dataset: TrafficDataset, splits):
-    """
-    Given the data, split it into random subsets of train, val, and test as given by splits
-    :param dataset: TrafficeDataset object
-    :param splits: (train, val, test) ratios
-    """
-    split_train, split_val, split_test = splits
-    train, test = train_test_split(dataset.data, test_size=split_train, random_state=1)
-    val, test = train_test_split(test, test_size=(split_val)/(1-split_train), random_state=1)
+# def get_splits(dataset: TrafficDataset, splits):
+#     """
+#     Given the data, split it into random subsets of train, val, and test as given by splits
+#     :param dataset: TrafficeDataset object
+#     :param splits: (train, val, test) ratios
+#     """
+#     split_train, split_val, split_test = splits
+#     train_x, train_y, test_x, test_y = train_test_split(dataset.data.x, dataset.data.y, test_size=split_train, random_state=1)
+#     val_x, val_y, test_x, test_y = train_test_split(test_x, test_y, test_size=(split_val)/(1-split_train), random_state=1)
 
-    return (train, val, test)
+
+#     return (train, val, test)
 
