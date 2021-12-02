@@ -51,8 +51,8 @@ class TrafficDataset():
 
             # (F,N) switched to (N,F)
             full_window = np.swapaxes(data[t:t+self.n_window, :], 0, 1)
-            g.x = full_window[:, 0:n_hist]
-            g.y = full_window[:, n_hist::]
+            g.x = torch.FloatTensor(full_window[:, 0:n_hist])
+            g.y = torch.FloatTensor(full_window[:, n_hist::])
             sequences += [g]
 
         return sequences
