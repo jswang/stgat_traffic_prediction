@@ -24,7 +24,7 @@ def parse_args():
     """
     parser = argparse.ArgumentParser()
     # F parameter
-    parser.add_argument('--n_his', type=int, default=12)
+    parser.add_argument('--n_hist', type=int, default=12)
     parser.add_argument('--n_pred', type=int, default=9)
     parser.add_argument('--batch_size', type=int, default=50)
     parser.add_argument('--epoch', type=int, default=50)
@@ -52,18 +52,32 @@ def main():
     args = parse_args()
 
     # Load weighted adjacency matrix W
-    W = weight_matrix(os.path.join('./dataset', args.graph + '.csv'))
+    W_pt_path = os.path.join('./dataset', args.graph + '.pt')
+    if os.path.exists(W_pt_path):
+        W = torch.load(W_pt_path)
+    else:
+        W = weight_matrix(os.path.join('./dataset', args.graph + '.csv'))
+        torch.save(W, W_pt_path)
 
     # Data Preprocessing and loading
-    data = pd.read_csv(os.path.join('./dataset', args.graph_data + '.csv'), header=None).values
+    data_pt_path = os.path.join('./dataset', args.graph_data + '.pt')
+    if os.path.exists(data_pt_path):
+        data = torch.load(data_pt_path)
+    else:
+        data = pd.read_csv(os.path.join('./dataset', args.graph_data + '.csv'), header=None).values
+        torch.save(data, data_pt_path)
+
     # right now just one big dataset
-    dataset = TrafficDataset(data, W, args.n_his, args.n_pred)
+    dataset = TrafficDataset(data, W, args.n_hist, args.n_pred)
     # Transfrom the dataset into train, validation, and test
     (train, val, test) = get_splits(dataset, (0.6, 0.2, 0.2))
     train_dataloader = DataLoader(train, batch_size=50, shuffle=True)
     val_dataloader = DataLoader(val, batch_size=50, shuffle=True)
     test_dataloader = DataLoader(test, batch_size=50, shuffle=True)
     # Train model
+    config['n_pred'] = args.n_pred
+    config['n_hist'] = args.n_hist
+    config['n_node'] = 228 #TODO parameterize
     model_train(train_dataloader, val_dataloader, config)
     # Test model
     model_test(test_dataloader, config)

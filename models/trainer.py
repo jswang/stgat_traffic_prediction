@@ -54,7 +54,6 @@ def eval(model, device, dataloader):
     # TODO return something
 
 
-
 def model_train(train_dataloader, val_dataloader, config):
     """
     Train the ST-GAT model. Evaluate on validation dataset as you go.
@@ -64,8 +63,8 @@ def model_train(train_dataloader, val_dataloader, config):
 
     # Make the model. TODO add RNN here
     # each datapoint in the graph is 228 x12: N x F (N = # nodes, F = time window)
-    # TODO set number of in channels = F for now, what should the number of out channels?
-    model = ST_GAT(in_channels=train_dataloader.dataset[0].x.shape[1], out_channels=train_dataloader.dataset[0].x.shape[1])
+    # TODO pass in n_hist and n_pred better
+    model = ST_GAT(in_channels=config['n_hist'], out_channels=config['n_pred'], num_nodes=config['n_node'])
     optimizer = optim.Adam(model.parameters(), lr=config['C_INITIAL_LR'], weight_decay=config['C_WEIGHT_DECAY'])
     loss_fn = torch.nn.MSELoss
 
