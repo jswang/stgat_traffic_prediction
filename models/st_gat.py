@@ -15,8 +15,8 @@ class ST_GAT(torch.nn.Module):
         self.num_nodes = num_nodes
 
         # single graph attentional layer with 8 attention heads
-        self.gat = GATConv(in_channels=self.in_channels, out_channels= self.in_channels,
-            heads=heads, dropout=self.dropout, concat=False)
+        self.gat = GATConv(in_channels=self.in_channels, out_channels=9,
+            heads=heads, dropout=self.dropout, concat=False) # use the number of output channels equivalent to width of data for predictions (9)
 
         # add two LSTM layers
         self.lstm1 = torch.nn.LSTM(input_size=self.num_nodes, hidden_size=32, num_layers=1)
@@ -36,17 +36,24 @@ class ST_GAT(torch.nn.Module):
 
         # RNN: 2 LSTM
         # incoming: x is (batchsize*num_nodes, seq_length), change into (batch_size, num_nodes, seq_length)
-        x = torch.reshape(x, (data.num_graphs, int(data.num_nodes/data.num_graphs), data.num_features)) #TODO: should this be batch then nodes or nodes then batch?
+        #x = torch.reshape(x, (data.num_graphs, int(data.num_nodes/data.num_graphs), data.num_features)) #TODO: should this be batch then nodes or nodes then batch?
         # for lstm: x should be (seq_length, batch_size, num_nodes)
         # sequence length = 12, batch_size = 50, input_dim = 228
-        x = torch.movedim(x, 2, 0)
-        x, _ = self.lstm1(x)
-        x, _ = self.lstm2(x)
+        
+        #x = torch.reshape(x, (data.num_graphs, int(data.num_nodes/data.num_graphs), 9)) # also currently hard codeds
+        
+        #x = torch.movedim(x, 2, 0)
+        
+        #x, _ = self.lstm1(x)
+        #x, _ = self.lstm2(x)
 
         # final output layer, x coming in is 12,50,128.
         # TODO: x going out should be?
-        x = self.linear(x)
+        #x = self.linear(x)
 
+        #x = torch.movedim(x, 2, 0)
+        #x = torch.movedim(x, 2, 1)
+        
         return x
 
 # class LSTM1(nn.Module):

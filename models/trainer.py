@@ -22,7 +22,7 @@ def train(model, device, dataloader, optimizer, loss_fn):
         batch = batch.to(device)
         optimizer.zero_grad()
         y_pred = torch.squeeze(model(batch))
-        loss = loss_fn(y_pred, torch.squeeze(batch.y).float())
+        loss = loss_fn()(y_pred.float(), torch.squeeze(batch.y).float())
         loss.backward()
         optimizer.step()
 
@@ -64,7 +64,8 @@ def model_train(train_dataloader, val_dataloader, config):
     # Make the model. TODO add RNN here
     # each datapoint in the graph is 228 x12: N x F (N = # nodes, F = time window)
     # TODO pass in n_hist and n_pred better
-    model = ST_GAT(in_channels=config['n_hist'], out_channels=config['n_pred'], num_nodes=config['n_node'])
+    #model = ST_GAT(in_channels=config['n_hist'], out_channels=config['n_pred'], num_nodes=config['n_node'])
+    model = ST_GAT(in_channels=config['n_hist'], out_channels=228, num_nodes=config['n_node'])
     optimizer = optim.Adam(model.parameters(), lr=config['C_INITIAL_LR'], weight_decay=config['C_WEIGHT_DECAY'])
     loss_fn = torch.nn.MSELoss
 
