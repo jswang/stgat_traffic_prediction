@@ -105,8 +105,8 @@ def load_from_checkpoint(checkpoint_path, config):
     model = ST_GAT(in_channels=config['N_HIST'], out_channels=config['N_PRED'], num_nodes=config['N_NODE'])
     optimizer = optim.Adam(model.parameters(), lr=config['C_INITIAL_LR'], weight_decay=config['C_WEIGHT_DECAY'])
 
-    checkpoint = torch.load(checkpoint_path)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    #checkpoint = torch.load(checkpoint_path)
+    #model.load_state_dict(checkpoint['model_state_dict'])
 
     return model
 

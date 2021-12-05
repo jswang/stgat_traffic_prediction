@@ -35,7 +35,7 @@ def main():
     # Constant config to use througout
     config = {
         'C_BATCH_SIZE': args.batch_size,
-        'C_EPOCHS': 1,
+        'C_EPOCHS': 150,
         'C_WEIGHT_DECAY': 5e-4,
         'C_INITIAL_LR': 2e-4,
         'C_CHECKPOINT_DIR': './runs',
@@ -62,8 +62,8 @@ def main():
     model_test(model, test_dataloader, device)
 
     # Example: Test using pretrained model
-    trained_model = load_from_checkpoint('./runs/model_12-05-142102.pt', config)
-    model_test(trained_model, test_dataloader, device)
+    #trained_model = load_from_checkpoint('./runs/model_12-05-142102.pt', config)
+    #model_test(trained_model, test_dataloader, device)
 
 
 if __name__ == "__main__":
