@@ -49,7 +49,7 @@ class ST_GAT(torch.nn.Module):
 
         # final output layer, x coming in is 12,50,128.
         x = self.linear(x)
-        x = torch.reshape(x, (9, 50*228)).T
+        x = torch.reshape(x, (9, data.num_nodes)).T
         
         return x
 
