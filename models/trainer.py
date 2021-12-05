@@ -38,14 +38,14 @@ def eval(model, device, dataloader, type=''):
             n += 1
     rmse, mae, mape = rmse / n, mae / n, mape / n
 
-    print(f'{type}, mae: {mae}, rmse: {rmse}, mape: {mape}')
+    print(f'{type}, MAE: {mae:.3f}, RMSE: {rmse:.3f}, MAPE: {mape:.3f}')
 
     #get the average score for each metric in each batch
     return rmse, mae, mape
 
 def train(model, device, train_dataloader, optimizer, loss_fn, epoch):
     model.train()
-    for _, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
+    for _, batch in enumerate(tqdm(train_dataloader, desc=f"Epoch {epoch}")):
         batch = batch.to(device)
         optimizer.zero_grad()
         y_pred = torch.squeeze(model(batch, device))
@@ -71,8 +71,9 @@ def model_train(train_dataloader, val_dataloader, config, device):
     # For every epoch, train the model on training dataset. Evaluate model on validation dataset
     for epoch in range(config['C_EPOCHS']):
         loss = train(model, device, train_dataloader, optimizer, loss_fn, epoch)
+        print(f"Loss: {loss:.3f}")
         if epoch % 5 == 0:
-            print(f"Epoch {epoch}, loss: {loss}")
+
             train_mae, train_rmse, train_mape = eval(model, device, train_dataloader, 'Train')
             val_mae, val_rmse, val_mape = eval(model, device, val_dataloader, 'Valid')
             writer.add_scalar("MAE/train", train_mae, epoch)
