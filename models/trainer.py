@@ -1,6 +1,8 @@
 import torch
 import torch.optim as optim
 from tqdm import tqdm
+import time
+import os
 
 from models.st_gat import ST_GAT
 from utils.math_utils import *
@@ -85,8 +87,26 @@ def model_train(train_dataloader, val_dataloader, config, device):
             writer.add_scalar("MAPE/val", val_mape, epoch)
 
     writer.flush()
+    # Save the model
+    timestr = time.strftime("%m-%d-%H%M%S")
+    torch.save({
+            "epoch": epoch,
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "loss": loss,
+            }, os.path.join(config["C_CHECKPOINT_DIR"], f"model_{timestr}.pt"))
 
     return model
 
 def model_test(model, test_dataloader, device):
     eval(model, device, test_dataloader, 'Test')
+
+def load_from_checkpoint(checkpoint_path, config):
+    model = ST_GAT(in_channels=config['N_HIST'], out_channels=config['N_PRED'], num_nodes=config['N_NODE'])
+    optimizer = optim.Adam(model.parameters(), lr=config['C_INITIAL_LR'], weight_decay=config['C_WEIGHT_DECAY'])
+
+    checkpoint = torch.load(checkpoint_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
+
+    return model
+

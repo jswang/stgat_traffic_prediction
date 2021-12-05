@@ -8,7 +8,7 @@ import argparse
 import torch
 
 from data_loader.dataloader import TrafficDataset, get_splits
-from models.trainer import model_train, model_test
+from models.trainer import load_from_checkpoint, model_train, model_test
 from torch_geometric.loader import DataLoader
 
 def parse_args():
@@ -35,9 +35,10 @@ def main():
     # Constant config to use througout
     config = {
         'C_BATCH_SIZE': args.batch_size,
-        'C_EPOCHS': 150,
+        'C_EPOCHS': 1,
         'C_WEIGHT_DECAY': 5e-4,
         'C_INITIAL_LR': 2e-4,
+        'C_CHECKPOINT_DIR': './runs',
         'N_PRED': args.n_pred,
         'N_HIST': args.n_hist,
     }
@@ -49,16 +50,21 @@ def main():
     val_dataloader = DataLoader(val, batch_size=args.batch_size, shuffle=True)
     test_dataloader = DataLoader(test, batch_size=args.batch_size, shuffle=True)
 
-    # Get gpu if you can
+    # # Get gpu if you can
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f"Training using {device}")
+    print(f"Using {device}")
 
-    # Configure and train model
+    # # Configure and train model
     config['N_NODE'] = dataset.n_node
     model = model_train(train_dataloader, val_dataloader, config, device)
 
     # Test Model
     model_test(model, test_dataloader, device)
+
+    # Example: Test using pretrained model
+    trained_model = load_from_checkpoint('./runs/model_12-05-142102.pt', config)
+    model_test(trained_model, test_dataloader, device)
+
 
 if __name__ == "__main__":
     main()
