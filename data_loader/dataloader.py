@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from torch_geometric.data import InMemoryDataset, Data
 from sklearn.model_selection import train_test_split
+from utils.math_utils import z_score
 
 #Given the original data, come up with one big dataset.
 class TrafficDataset():
@@ -52,6 +53,8 @@ class TrafficDataset():
             # (F,N) switched to (N,F)
             full_window = np.swapaxes(data[t:t+self.n_window, :], 0, 1)
             g.x = torch.FloatTensor(full_window[:, 0:n_hist])
+            # normalize the feature vectors using z-score with mean and std of x
+            g.x = z_score(g.x, torch.mean(g.x), torch.std(g.x))
             g.y = torch.FloatTensor(full_window[:, n_hist::])
             sequences += [g]
 
