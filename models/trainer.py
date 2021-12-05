@@ -51,6 +51,10 @@ def eval(model, device, dataloader):
             y_true.append(batch.y.view(pred.shape).detach().cpu())
             y_pred.append(pred.detach().cpu())
 
+    # update to be accuracy metric from paper (we might want to compute multiple types of accuracy metrics here)
+    acc = 0
+
+    return acc
     # TODO return something
 
 
@@ -76,16 +80,22 @@ def model_train(train_dataloader, val_dataloader, config):
         val_result = eval(model, device, val_dataloader)
         # TODO add tensorboard to visualize training over time
         # print(f'Epoch: {epoch:02d}, Loss: {loss:.4f}, Train: {100 * train_acc:.2f}%, Valid: {100 * valid_acc:.2f}%')
+    return model
 
-def model_test(dataset, config):
+def model_test(dataset, model, config, train_dataset, val_dataset):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # If you use GPU, the device should be cuda
     print('Device: {}'.format(device))
-    data = dataset.to(device)
-    split_idx = dataset.get_idx_split()
-    model = ST_GAT(in_channels=dataset.shape[1::], out_channels=dataset.shape[1::])
-    train_acc, valid_acc, test_acc = eval(model, data, split_idx)
+    #data = dataset.to(device)
+    #split_idx = dataset.get_idx_split()
+    #model = ST_GAT(in_channels=dataset.shape[1::], out_channels=dataset.shape[1::])
+    # in testing, we should use the model that we've trained in order to evaluate the performance of the model
+
+    train_acc = eval(model, device, train_dataset)
+    valid_acc = eval(model, device, val_dataset)
+    test_acc = eval(model, device, dataset)
+    #train_acc, valid_acc, test_acc = eval(model, data, split_idx) 
 
     print(f'Test:, '
           f'Train: {100 * train_acc:.2f}%, '

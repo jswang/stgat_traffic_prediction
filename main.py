@@ -11,8 +11,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 from utils.math_graph import *
 from data_loader.dataloader import TrafficDataset, get_splits
-from models.trainer import model_train
-from models.tester import model_test
+from models.trainer import model_train, model_test
+#from models.tester import model_test
 from torch_geometric.loader import DataLoader
 
 import torch
@@ -78,9 +78,10 @@ def main():
     config['n_pred'] = args.n_pred
     config['n_hist'] = args.n_hist
     config['n_node'] = 228 #TODO parameterize this better
-    model_train(train_dataloader, val_dataloader, config)
+    model = model_train(train_dataloader, val_dataloader, config)
+    model_test(test_dataloader, model, config, train_dataset=train_dataloader, val_dataset=val_dataloader)
     # Test model  model_test(inputs, batch_size, n_his, n_pred, inf_mode, load_path='./output/models/'):
-    model_test(test_dataloader, batch_size=args.batch_size, n_his=args.n_hist, n_pred=args.n_pred, inf_mode=args.inf_mode)
+    #model_test(test_dataloader, batch_size=args.batch_size, n_his=args.n_hist, n_pred=args.n_pred, inf_mode=args.inf_mode)
 
 if __name__ == "__main__":
     main()
