@@ -4,10 +4,7 @@
 
 import torch
 import torch.optim as optim
-import numpy as np
-import pandas as pd
 from tqdm import tqdm
-from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, mean_absolute_error
 
 from models.st_gat import ST_GAT
 from utils.math_utils import *
@@ -39,9 +36,9 @@ def eval(model, device, dataloader, type=''):
                 pred = model(batch, device)
 
             truth = batch.y.view(pred.shape)
-            rmse += mean_squared_error(truth, pred, squared=False)
-            mae += mean_absolute_error(truth, pred)
-            mape += mean_absolute_percentage_error(truth, pred)
+            rmse += RMSE(truth, pred)
+            mae += MAE(truth, pred)
+            mape += MAPE(truth, pred)
             n += 1
     rmse, mae, mape = rmse / n, mae / n, mape / n
 
@@ -66,7 +63,6 @@ def model_train(train_dataloader, val_dataloader, config, device):
 
     # For every epoch, train the model on training dataset. Evaluate model on validation dataset
     for epoch in range(config['C_EPOCHS']):
-
         for _, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
             batch = batch.to(device)
             optimizer.zero_grad()
