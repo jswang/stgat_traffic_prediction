@@ -22,6 +22,7 @@ def eval(model, device, dataloader, type=''):
     Evaluation function to evaluate model on data
     """
     model.eval()
+    model.to(device)
 
     mae = 0
     rmse = 0
@@ -61,9 +62,10 @@ def model_train(train_dataloader, val_dataloader, config, device):
     loss_fn = torch.nn.MSELoss
 
     model.train()
+    model.to(device)
 
     # For every epoch, train the model on training dataset. Evaluate model on validation dataset
-    for epoch in range(5):#config['C_EPOCHS']): # only do a couple of epochs for now to see what's happening
+    for epoch in range(config['C_EPOCHS']):
 
         for _, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
             batch = batch.to(device)
@@ -90,5 +92,5 @@ def model_train(train_dataloader, val_dataloader, config, device):
 
     return model
 
-def model_test(model, test_dataloader, device='cpu'):
+def model_test(model, test_dataloader, device):
     eval(model, device, test_dataloader, 'Test')
