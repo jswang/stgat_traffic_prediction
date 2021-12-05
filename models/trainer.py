@@ -34,6 +34,8 @@ def eval(model, device, dataloader, type=''):
                 pred = model(batch, device)
 
             truth = batch.y.view(pred.shape)
+            truth = un_z_score(truth, torch.mean(truth), torch.std(truth))
+            pred = un_z_score(pred, torch.mean(pred), torch.std(pred))
             rmse += RMSE(truth, pred)
             mae += MAE(truth, pred)
             mape += MAPE(truth, pred)
@@ -106,7 +108,7 @@ def load_from_checkpoint(checkpoint_path, config):
     optimizer = optim.Adam(model.parameters(), lr=config['C_INITIAL_LR'], weight_decay=config['C_WEIGHT_DECAY'])
 
     #checkpoint = torch.load(checkpoint_path)
-    #model.load_state_dict(checkpoint['model_state_dict'])
+    #gitmodel.load_state_dict(checkpoint['model_state_dict'])
 
     return model
 

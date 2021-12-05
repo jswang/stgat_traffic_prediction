@@ -41,6 +41,9 @@ def z_score(x, mean, std):
     '''
     return (x - mean) / std
 
+def un_z_score(x_normed, mean, std):
+    return x_normed * std  + mean
+
 
 def MAPE(v, v_):
     '''
@@ -49,7 +52,9 @@ def MAPE(v, v_):
     :param v_: torch array, prediction.
     :return: torch scalar, MAPE averages on all elements of input.
     '''
-    return torch.mean(torch.abs(v_ - v) / (v + 1e-15))
+    #return torch.mean(torch.abs(v_ - v) / (v + 1e-15))
+    # make MAPE a percentage score; also include denominator inside absolute value to fit with the equation given in paper
+    return torch.mean(torch.abs((v_ - v)/ (v + 1) * 100))
 
 
 def RMSE(v, v_):

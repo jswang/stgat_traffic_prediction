@@ -34,6 +34,8 @@ class ST_GAT(torch.nn.Module):
         self.linear = torch.nn.Linear(128, self.num_nodes)
         torch.nn.init.xavier_normal(self.linear.weight)
 
+        self.bn2 = torch.nn.BatchNorm1d(9)
+
     def forward(self, data, device):
         x, edge_index = data.x, data.edge_index
         # apply dropout
@@ -71,5 +73,6 @@ class ST_GAT(torch.nn.Module):
         x = torch.movedim(x, 0, 2)
         s = x.shape
         x = torch.reshape(x, (s[0]*s[1], s[2]))
+        x  = self.bn2(x)
 
         return x
