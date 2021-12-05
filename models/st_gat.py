@@ -23,10 +23,17 @@ class ST_GAT(torch.nn.Module):
         # fully-connected neural network
         self.linear = torch.nn.Linear(128, self.num_nodes)
 
-    def forward(self, data):
+    def forward(self, data, device):
         x, edge_index = data.x, data.edge_index
         # apply dropout
-        x = torch.FloatTensor(x)
+        if device == 'cpu':
+            x = torch.FloatTensor(x)
+        elif device == 'gpu':
+            x = torch.cuda.FloatTensor(x)
+        else:
+            print("ERROR: model forward pass not given a device that is gpu or cpu")
+            return None
+
         # gat layer
         x = self.gat(x, edge_index)
         x = F.dropout(x, self.dropout, training=self.training)

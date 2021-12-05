@@ -35,7 +35,7 @@ def eval(model, device, dataloader, type=''):
             pass
         else:
             with torch.no_grad():
-                pred = model(batch)
+                pred = model(batch, device)
 
             truth = batch.y.view(pred.shape)
             rmse += mean_squared_error(truth, pred, squared=False)
@@ -55,8 +55,6 @@ def model_train(train_dataloader, val_dataloader, config, device):
     Train the ST-GAT model. Evaluate on validation dataset as you go.
     """
 
-    print("Training Model")
-
     # Make the model. Each datapoint in the graph is 228x12: N x F (N = # nodes, F = time window)
     model = ST_GAT(in_channels=config['N_HIST'], out_channels=config['N_PRED'], num_nodes=config['N_NODE'])
     optimizer = optim.Adam(model.parameters(), lr=config['C_INITIAL_LR'], weight_decay=config['C_WEIGHT_DECAY'])
@@ -70,7 +68,7 @@ def model_train(train_dataloader, val_dataloader, config, device):
         for _, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
             batch = batch.to(device)
             optimizer.zero_grad()
-            y_pred = torch.squeeze(model(batch))
+            y_pred = torch.squeeze(model(batch, device))
             loss = loss_fn()(y_pred.float(), torch.squeeze(batch.y).float())
             writer.add_scalar("Loss/train", loss, epoch)
             loss.backward()
