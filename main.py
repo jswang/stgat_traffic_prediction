@@ -10,7 +10,8 @@ import numpy as np
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 from utils.math_utils import *
-from data_loader.dataloader import TrafficDataset, get_splits
+# from data_loader.dataloader import TrafficDataset, get_splits
+from data_loader.new_dataloader import TrafficDataset, get_splits
 from models.trainer import model_train, model_test
 from torch_geometric.loader import DataLoader
 
@@ -50,38 +51,14 @@ def main():
     """
     args = parse_args()
 
-    # Load weighted adjacency matrix W
-    W_pt_path = os.path.join('./dataset', args.graph + '.pt')
-    if os.path.exists(W_pt_path):
-        W = torch.load(W_pt_path)
-    else:
-        W = weight_matrix(os.path.join('./dataset', args.graph + '.csv'))
-        torch.save(W, W_pt_path)
-
-    # Data Preprocessing and loading
-    data_pt_path = os.path.join('./dataset', args.graph_data + '.pt')
-    if os.path.exists(data_pt_path):
-        data = torch.load(data_pt_path)
-    else:
-        data = pd.read_csv(os.path.join('./dataset', args.graph_data + '.csv'), header=None).values
-        torch.save(data, data_pt_path)
-
-    dataset = TrafficDataset(data, W, args.n_hist, args.n_pred)
-    # Transform the dataset into train, validation, and test
-    (train, val, test) = get_splits(dataset, (0.6, 0.2, 0.2))
-
-    # Calculate z score and normalize the data
-    # TODO make this cleaner
-    mean = torch.mean(train)
-    std_dev = torch.std(train)
-    train = z_score(train, mean, std_dev)
-    val = z_score(val, mean, std_dev)
-    test = z_score(test, mean, std_dev)
-
+    # Get the train/val/test datasets
+    dataset = TrafficDataset(args.n_hist, args.n_pred)
+    train, val, test = get_splits(dataset, (0.6, 0.2, 0.2))
     train_dataloader = DataLoader(train, batch_size=args.batch_size, shuffle=True)
     val_dataloader = DataLoader(val, batch_size=args.batch_size, shuffle=True)
     test_dataloader = DataLoader(test, batch_size=args.batch_size, shuffle=True)
-    # Train model
+
+    # Configure and train model
     config['n_pred'] = args.n_pred
     config['n_hist'] = args.n_hist
     config['n_node'] = dataset.n_node

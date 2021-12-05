@@ -1,26 +1,76 @@
 import torch
 import numpy as np
 from torch_geometric.data import InMemoryDataset, Data
-from sklearn.model_selection import train_test_split
-from utils.math_utils import z_score
+import pandas as pd
+import os
+from shutil import copyfile
+from utils.math_utils import *
+
+def weight_matrix(file_path, sigma2=0.1, epsilon=0.5, scaling=True):
+    '''
+    Load weight matrix function.
+    :param file_path: str, the path of saved weight matrix file.
+    :param sigma2: float, scalar of matrix W.
+    :param epsilon: float, thresholds to control the sparsity of matrix W.
+    :param scaling: bool, whether applies numerical scaling on W.
+    :return: np.ndarray, [n_node, n_node].
+    '''
+    W = pd.read_csv(file_path, header=None).values
+
+    # check whether W is a 0/1 matrix.
+    if set(np.unique(W)) == {0, 1}:
+        print('The input graph is a 0/1 matrix; set "scaling" to False.')
+        scaling = False
+
+    if scaling:
+        n = W.shape[0]
+        W = W / 10000.
+        W2, W_mask = W * W, np.ones([n, n]) - np.identity(n)
+        # refer to Eq. 20 in Graph Attention Network
+        W = np.exp(-W2 / sigma2) * (np.exp(-W2 / sigma2) >= epsilon) * W_mask
+        # Add self loop
+        W += np.identity(n)
+
+    return W
 
 #Given the original data, come up with one big dataset.
-class TrafficDataset():
-    def __init__(self, data, W, n_hist, n_pred):
-        self.mean = np.mean(data)
-        self.std_dev = np.std(data)
-        self.data = self.speed2vec(W, data, n_hist, n_pred)
+class TrafficDataset(InMemoryDataset):
+    def __init__(self, n_hist, n_pred, root='', transform=None, pre_transform=None):
+        self.n_hist = n_hist
+        self.n_pred = n_pred
+        super().__init__(root, transform, pre_transform)
+        self.data, self.slices = torch.load(self.processed_paths[1])
+        print("here")
 
-    def speed2vec(self, W, data, n_hist, n_pred):
+    @property
+    def raw_file_names(self):
+        return [os.path.join(self.raw_dir, 'PeMSD7_W_228.csv'), os.path.join(self.raw_dir, 'PeMSD7_V_228.csv')]
+
+    @property
+    def processed_file_names(self):
+        return ['./weight.pt', './data.pt']
+
+    def download(self):
+        #TODO: need to implement for other data types
+        copyfile('./dataset/PeMSD7_W_228.csv', os.path.join(self.raw_dir, 'PeMSD7_W_228.csv'))
+        copyfile('./dataset/PeMSD7_V_228.csv', os.path.join(self.raw_dir, 'PeMSD7_V_228.csv'))
+
+    def process(self):
         """
-        Given some data, figure out T, F, and N and return graphs for F timewindow
-        :param W: Weight matrix
-        :param data: Raw data to process
-        :param n_hist: Number of timesteps in historical window to consider
-        :param n_pred: Number of timestemps into the future to predict (ground truth)
+        Process the raw datasets into saved .pt dataset for later use
         """
+        # Load weighted adjacency matrix W, save it because it's been processed
+        W = weight_matrix(self.raw_file_names[0])
+        torch.save(W, self.processed_paths[0])
+
+        # Data Preprocessing and loading
+        data = pd.read_csv(self.raw_file_names[1], header=None).values
+        # Technically using the validation and test datasets here, but it's fine, would normally get the
+        # mean and std_dev from a large dataset
+        data = z_score(data, np.mean(data), np.std(data))
+
         self.n_datapoints, self.n_node = data.shape
-        self.n_window = n_hist + n_pred
+        self.n_window = self.n_hist + self.n_pred
         # The number of actual sequences you can make
         n_sequences = self.n_datapoints - self.n_window + 1
 
@@ -36,8 +86,9 @@ class TrafficDataset():
                     edge_index[1, num_edges] = j
                     edge_attr[num_edges] = W[i, j]
                     num_edges += 1
+        # using resize_ to just keep the first num_edges entries
         edge_index = edge_index.resize_(2, num_edges)
-        edge_attr = np.resize(edge_attr, (num_edges, 1))
+        edge_attr = edge_attr.resize_(num_edges, 1)
 
         sequences = []
         # T x F x N
@@ -48,44 +99,30 @@ class TrafficDataset():
             g.__num_nodes__ = self.n_node
 
             g.edge_index = edge_index
-            g.edge_attr  = torch.from_numpy(edge_attr)
+            g.edge_attr  = edge_attr
 
             # (F,N) switched to (N,F)
             full_window = np.swapaxes(data[t:t+self.n_window, :], 0, 1)
-            g.x = torch.FloatTensor(full_window[:, 0:n_hist])
-            g.y = torch.FloatTensor(full_window[:, n_hist::])
+            g.x = torch.FloatTensor(full_window[:, 0:self.n_hist])
+            g.y = torch.FloatTensor(full_window[:, self.n_hist::])
             sequences += [g]
 
-        return sequences
-
-
-    def __len__(self):
-        """
-        Total number of samples
-        """
-        len(self.data)
-
-
-    def __get_item__(self, index):
-        """
-        Generates one sample of data
-        :param index: Index of data to retreive
-        """
-        data = self.sequences[index]
-        data = (data - self.mean) / self.std_dev
-        X = data[0:self.n_hist]
-        y = data[self.n_hist::]
-        return X,y
-
+        # Make the actual dataset
+        data, slices = self.collate(sequences)
+        torch.save((data, slices), self.processed_paths[1])
 
 def get_splits(dataset: TrafficDataset, splits):
     """
     Given the data, split it into random subsets of train, val, and test as given by splits
-    :param dataset: TrafficeDataset object
+    :param dataset: list to split
     :param splits: (train, val, test) ratios
     """
-    split_train, split_val, split_test = splits
-    train, test = train_test_split(dataset.data, test_size=split_train, random_state=1)
-    val, test = train_test_split(test, test_size=(split_val)/(1-split_train), random_state=1)
+    split_train, split_val, _ = splits
+    dataset = dataset.shuffle()
+    i = int(split_train * len(dataset))
+    j = int(split_val * len(dataset))
+    train = dataset[:i]
+    val = dataset[i:i+j]
+    test = dataset[i+j:]
 
-    return (train, val, test)
+    return train, val, test
