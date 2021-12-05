@@ -9,10 +9,9 @@ import numpy as np
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-from utils.math_graph import *
+from utils.math_utils import *
 from data_loader.dataloader import TrafficDataset, get_splits
 from models.trainer import model_train, model_test
-#from models.tester import model_test
 from torch_geometric.loader import DataLoader
 
 import torch
@@ -70,6 +69,15 @@ def main():
     dataset = TrafficDataset(data, W, args.n_hist, args.n_pred)
     # Transform the dataset into train, validation, and test
     (train, val, test) = get_splits(dataset, (0.6, 0.2, 0.2))
+
+    # Calculate z score and normalize the data
+    # TODO make this cleaner
+    mean = torch.mean(train)
+    std_dev = torch.std(train)
+    train = z_score(train, mean, std_dev)
+    val = z_score(val, mean, std_dev)
+    test = z_score(test, mean, std_dev)
+
     train_dataloader = DataLoader(train, batch_size=args.batch_size, shuffle=True)
     val_dataloader = DataLoader(val, batch_size=args.batch_size, shuffle=True)
     test_dataloader = DataLoader(test, batch_size=args.batch_size, shuffle=True)
