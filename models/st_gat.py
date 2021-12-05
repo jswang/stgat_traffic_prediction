@@ -35,7 +35,9 @@ class ST_GAT(torch.nn.Module):
         x = F.dropout(x, self.dropout, training=self.training)
         x = F.log_softmax(x, dim=1)
 
-        # RNN: 2 LSTMyP
+        # output of gat: [11400, 12]
+
+        # RNN: 2 LSTM
         # incoming: x is (batchsize*num_nodes, seq_length), change into (batch_size, num_nodes, seq_length)
         #TODO: should this be batch then nodes or nodes then batch? check this
         x = torch.reshape(x, (data.num_graphs, int(data.num_nodes/data.num_graphs), data.num_features))
@@ -46,7 +48,6 @@ class ST_GAT(torch.nn.Module):
         x, _ = self.lstm1(x)
         # [12, 50, 32] -> [12, 50, 128]
         x, _ = self.lstm2(x)
-
         # [12,50,128] -> [12, 50, 228]
         x = self.linear(x)
 

@@ -29,7 +29,7 @@ def train(model, device, dataloader, optimizer, loss_fn):
     return loss.item()
 
 @torch.no_grad()
-def eval(model, device, dataloader, num_batches=50):
+def eval(model, device, dataloader, type=''):
     """
     Evaluation function to evaluate model on data
     """
@@ -39,6 +39,7 @@ def eval(model, device, dataloader, num_batches=50):
     rmse = 0
     mape = 0
     n = 0
+
 
     # Evaluate model on all data
     for _, batch in enumerate(dataloader):
@@ -50,24 +51,17 @@ def eval(model, device, dataloader, num_batches=50):
             with torch.no_grad():
                 pred = model(batch)
 
-            y_true.append(batch.y.view(pred.shape).detach().cpu())
-            y_pred.append(pred.detach().cpu())
+            truth = batch.y.view(pred.shape)
+            rmse += mean_squared_error(truth, pred, squared=False)
+            mae += mean_absolute_error(truth, pred)
+            mape += mean_absolute_percentage_error(truth, pred)
+            n += 1
+    rmse, mae, mape = rmse / n, mae / n, mape / n
 
-    # actually need to convert this back into speeds given vectors
-    # update to be accuracy metric from paper (we might want to compute multiple types of accuracy metrics here
-    rmse = 0
-    mae = 0
-    mape = 0
-    for i in range(num_batches): # replace this with official arg for number of batches
-        # the final index in the feature gives the velocity that we want
-        vel_true = y_true[i][:, -1:]
-        vel_pred = y_pred[i][:, -1:]
-        rmse += mean_squared_error(vel_true, vel_pred, squared=False)
-        mae += mean_absolute_error(vel_true, vel_pred)
-        mape += mean_absolute_percentage_error(vel_true, vel_pred)
+    print(f'{type}, mae: {mae}, rmse: {rmse}, mape: {mape}')
 
     #get the average score for each metric in each batch
-    return rmse / num_batches, mae / num_batches, mape / num_batches
+    return rmse, mae, mape
 
 
 def model_train(train_dataloader, val_dataloader, config):
@@ -88,36 +82,14 @@ def model_train(train_dataloader, val_dataloader, config):
     # For every epoch, train the model on training dataset. Evaluate model on validation dataset
     for epoch in range(1):#config['C_EPOCHS']): # only do a couple of epochs for now to see what's happening
         loss = train(model, device, train_dataloader, optimizer, loss_fn)
-        print(loss)
-        train_result = eval(model, device, train_dataloader)
-        val_result = eval(model, device, val_dataloader)
-        # TODO add tensorboard to visualize training over time
-        # print(f'Epoch: {epoch:02d}, Loss: {loss:.4f}, Train: {100 * train_acc:.2f}%, Valid: {100 * valid_acc:.2f}%')
+
+        if epoch %10 == 0:
+            print(f"Epoch {epoch}, loss: {loss}")
+            eval(model, device, train_dataloader, 'Train')
+            eval(model, device, val_dataloader, 'Valid')
+
     return model
 
 def model_test(model, test_dataloader):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-    #TODO fix putting thing on device
-    #data = dataset.to(device)
-    #split_idx = dataset.get_idx_split()
-    #model = ST_GAT(in_channels=dataset.shape[1::], out_channels=dataset.shape[1::])
-    # in testing, we should use the model that we've trained in order to evaluate the performance of the model
-
-    train_rmse, train_mae, train_mape = eval(model, device, train_dataset)
-    valid_rmse, valid_mae, valid_mape = eval(model, device, val_dataset)
-    test_rmse, test_mae, test_mape = eval(model, device, dataset)
-    #train_acc, valid_acc, test_acc = eval(model, data, split_idx)
-
-    print(f'Test:, '
-          f'Train RMSE: {100 * train_rmse:.2f}, '
-          f'Valid RMSE: {100 * valid_rmse:.2f} '
-          f'Test RMSE: {100 * test_rmse:.2f}')
-    print(f'Test:, '
-          f'Train MAE: {100 * train_mae:.2f}, '
-          f'Valid MAE: {100 * valid_mae:.2f} '
-          f'Test MAE: {100 * test_mae:.2f}')
-    print(f'Test:, '
-          f'Train MAPE: {100 * train_mape:.2f}%, '
-          f'Valid MAPE: {100 * valid_mape:.2f}% '
-          f'Test MAPE: {100 * test_mape:.2f}%')
+    eval(model, device, test_dataloader, 'Test')
