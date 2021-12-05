@@ -39,7 +39,6 @@ class ST_GAT(torch.nn.Module):
 
         # RNN: 2 LSTM
         # incoming: x is (batchsize*num_nodes, seq_length), change into (batch_size, num_nodes, seq_length)
-        #TODO: should this be batch then nodes or nodes then batch? check this
         x = torch.reshape(x, (data.num_graphs, int(data.num_nodes/data.num_graphs), data.num_features))
         # for lstm: x should be (seq_length, batch_size, num_nodes)
         # sequence length = 12, batch_size = 50, input_dim = 228
@@ -50,11 +49,9 @@ class ST_GAT(torch.nn.Module):
         x, _ = self.lstm2(x)
         # [12,50,128] -> [12, 50, 228]
         x = self.linear(x)
-
         # Then, select the last 9 outputs for the prediction into the future
         # [12, 50, 228] -> [9, 50, 228]
         x = x[-self.out_channels:, :, :]
-
         # [9, 50, 228] ->  [11400, 9]
         x = torch.movedim(x, 0, 2)
         s = x.shape

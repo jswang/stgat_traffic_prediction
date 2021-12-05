@@ -27,7 +27,7 @@ class TrafficDataset():
         # manipulate nxn matrix into 2xnum_edges
         edge_index = torch.zeros((2, self.n_node**2), dtype=torch.long)
         # create an edge_attr matrix with our weights  (num_edges x 1) --> our edge features are dim 1
-        edge_attr = np.zeros((self.n_node**2, 1)) # TODO make this natively tensor
+        edge_attr = torch.zeros((self.n_node**2, 1))
         num_edges = 0
         for i in range(self.n_node):
             for j in range(self.n_node):

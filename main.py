@@ -67,7 +67,6 @@ def main():
         data = pd.read_csv(os.path.join('./dataset', args.graph_data + '.csv'), header=None).values
         torch.save(data, data_pt_path)
 
-    # right now just one big dataset
     dataset = TrafficDataset(data, W, args.n_hist, args.n_pred)
     # Transform the dataset into train, validation, and test
     (train, val, test) = get_splits(dataset, (0.6, 0.2, 0.2))
@@ -77,7 +76,7 @@ def main():
     # Train model
     config['n_pred'] = args.n_pred
     config['n_hist'] = args.n_hist
-    config['n_node'] = 228 #TODO parameterize this better
+    config['n_node'] = dataset.n_node
     model = model_train(train_dataloader, val_dataloader, config)
 
     # Test Model
