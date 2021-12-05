@@ -28,11 +28,8 @@ class ST_GAT(torch.nn.Module):
         # apply dropout
         if device == 'cpu':
             x = torch.FloatTensor(x)
-        elif device == 'gpu':
-            x = torch.cuda.FloatTensor(x)
         else:
-            print("ERROR: model forward pass not given a device that is gpu or cpu")
-            return None
+            x = torch.cuda.FloatTensor(x)
 
         # gat layer
         x = self.gat(x, edge_index)
