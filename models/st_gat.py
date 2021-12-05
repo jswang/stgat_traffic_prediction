@@ -17,10 +17,20 @@ class ST_GAT(torch.nn.Module):
 
         # add two LSTM layers
         self.lstm1 = torch.nn.LSTM(input_size=self.num_nodes, hidden_size=32, num_layers=1)
+        for name, param in self.lstm1.named_parameters():
+            if 'bias' in name:
+                torch.nn.init.constant(param, 0.0)
+            elif 'weight' in name:
+                torch.nn.init.xavier_normal(param)
         self.lstm2 = torch.nn.LSTM(input_size=32, hidden_size=128, num_layers=1)
-
+        for name, param in self.lstm1.named_parameters():
+            if 'bias' in name:
+                torch.nn.init.constant(param, 0.0)
+            elif 'weight' in name:
+                torch.nn.init.xavier_normal(param)
         # fully-connected neural network
         self.linear = torch.nn.Linear(128, self.num_nodes)
+        torch.nn.init.xavier_normal(self.linear.weight)
 
     def forward(self, data, device):
         x, edge_index = data.x, data.edge_index
