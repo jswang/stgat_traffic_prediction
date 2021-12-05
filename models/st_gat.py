@@ -15,6 +15,8 @@ class ST_GAT(torch.nn.Module):
         self.gat = GATConv(in_channels=self.in_channels, out_channels=12,
             heads=heads, dropout=self.dropout, concat=False) # use the number of output channels equivalent to width of data for predictions (9)
 
+        self.bn1  = torch.nn.BatchNorm1d(12)
+
         # add two LSTM layers
         self.lstm1 = torch.nn.LSTM(input_size=self.num_nodes, hidden_size=32, num_layers=1)
         for name, param in self.lstm1.named_parameters():
@@ -42,9 +44,10 @@ class ST_GAT(torch.nn.Module):
 
         # gat layer
         x = self.gat(x, edge_index)
+        x = self.bn1(x)
         x = F.dropout(x, self.dropout, training=self.training)
         x = F.log_softmax(x, dim=1)
-
+        
         # output of gat: [11400, 12]
 
         # RNN: 2 LSTM
@@ -63,6 +66,8 @@ class ST_GAT(torch.nn.Module):
         # [12, 50, 228] -> [9, 50, 228]
         x = x[-self.out_channels:, :, :]
         # [9, 50, 228] ->  [11400, 9]
+
+
         x = torch.movedim(x, 0, 2)
         s = x.shape
         x = torch.reshape(x, (s[0]*s[1], s[2]))
