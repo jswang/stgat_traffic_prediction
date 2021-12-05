@@ -49,7 +49,7 @@ def MAPE(v, v_):
     :param v_: torch array, prediction.
     :return: torch scalar, MAPE averages on all elements of input.
     '''
-    return torch.mean(torch.abs(v_ - v) / (v + 1e-5))
+    return torch.mean(torch.abs(v_ - v) / (v + 1e-15))
 
 
 def RMSE(v, v_):
