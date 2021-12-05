@@ -25,7 +25,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     # F parameter
     parser.add_argument('--n_hist', type=int, default=12)
-    parser.add_argument('--n_pred', type=int, default=12)
+    parser.add_argument('--n_pred', type=int, default=9)
     parser.add_argument('--batch_size', type=int, default=50)
     parser.add_argument('--epoch', type=int, default=50)
     parser.add_argument('--save', type=int, default=10)
@@ -69,7 +69,7 @@ def main():
 
     # right now just one big dataset
     dataset = TrafficDataset(data, W, args.n_hist, args.n_pred)
-    # Transfrom the dataset into train, validation, and test
+    # Transform the dataset into train, validation, and test
     (train, val, test) = get_splits(dataset, (0.6, 0.2, 0.2))
     train_dataloader = DataLoader(train, batch_size=args.batch_size, shuffle=True)
     val_dataloader = DataLoader(val, batch_size=args.batch_size, shuffle=True)
@@ -79,9 +79,9 @@ def main():
     config['n_hist'] = args.n_hist
     config['n_node'] = 228 #TODO parameterize this better
     model = model_train(train_dataloader, val_dataloader, config)
-    model_test(test_dataloader, model, config, train_dataset=train_dataloader, val_dataset=val_dataloader)
-    # Test model  model_test(inputs, batch_size, n_his, n_pred, inf_mode, load_path='./output/models/'):
-    #model_test(test_dataloader, batch_size=args.batch_size, n_his=args.n_hist, n_pred=args.n_pred, inf_mode=args.inf_mode)
+
+    # Test Model
+    model_test(model, test_dataloader)
 
 if __name__ == "__main__":
     main()

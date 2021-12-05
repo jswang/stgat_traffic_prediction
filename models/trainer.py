@@ -18,7 +18,6 @@ def train(model, device, dataloader, optimizer, loss_fn):
     """
     model.train()
     loss=0
-
     for _, batch in enumerate(tqdm(dataloader, desc="Iteration")):
         batch = batch.to(device)
         optimizer.zero_grad()
@@ -33,14 +32,16 @@ def train(model, device, dataloader, optimizer, loss_fn):
 def eval(model, device, dataloader, num_batches=50):
     """
     Evaluation function to evaluate model on data
-
     """
     model.eval()
-    y_true = []
-    y_pred = []
 
-    # Run model on all data
-    for _, batch in enumerate(tqdm(dataloader, desc="Iteration")):
+    mae = 0
+    rmse = 0
+    mape = 0
+    n = 0
+
+    # Evaluate model on all data
+    for _, batch in enumerate(dataloader):
         batch = batch.to(device)
 
         if batch.x.shape[0] == 1:
@@ -51,7 +52,7 @@ def eval(model, device, dataloader, num_batches=50):
 
             y_true.append(batch.y.view(pred.shape).detach().cpu())
             y_pred.append(pred.detach().cpu())
-    
+
     # actually need to convert this back into speeds given vectors
     # update to be accuracy metric from paper (we might want to compute multiple types of accuracy metrics here
     rmse = 0
@@ -64,7 +65,7 @@ def eval(model, device, dataloader, num_batches=50):
         rmse += mean_squared_error(vel_true, vel_pred, squared=False)
         mae += mean_absolute_error(vel_true, vel_pred)
         mape += mean_absolute_percentage_error(vel_true, vel_pred)
-    
+
     #get the average score for each metric in each batch
     return rmse / num_batches, mae / num_batches, mape / num_batches
 
@@ -73,19 +74,19 @@ def model_train(train_dataloader, val_dataloader, config):
     """
     Train the ST-GAT model. Evaluate on validation dataset as you go.
     """
+    print("Training Model")
     # Get GPU if you can
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    # Make the model. TODO add RNN here
-    # each datapoint in the graph is 228 x12: N x F (N = # nodes, F = time window)
+    # Make the model.
+    # each datapoint in the graph is 228x12: N x F (N = # nodes, F = time window)
     # TODO pass in n_hist and n_pred better
-    #model = ST_GAT(in_channels=config['n_hist'], out_channels=config['n_pred'], num_nodes=config['n_node'])
-    model = ST_GAT(in_channels=config['n_hist'], out_channels=228, num_nodes=config['n_node'])
+    model = ST_GAT(in_channels=config['n_hist'], out_channels=config['n_pred'], num_nodes=config['n_node'])
     optimizer = optim.Adam(model.parameters(), lr=config['C_INITIAL_LR'], weight_decay=config['C_WEIGHT_DECAY'])
     loss_fn = torch.nn.MSELoss
 
     # For every epoch, train the model on training dataset. Evaluate model on validation dataset
-    for epoch in range(0,1):#config['C_EPOCHS']): # only do a couple of epochs for now to see what's happening
+    for epoch in range(1):#config['C_EPOCHS']): # only do a couple of epochs for now to see what's happening
         loss = train(model, device, train_dataloader, optimizer, loss_fn)
         print(loss)
         train_result = eval(model, device, train_dataloader)
@@ -94,11 +95,10 @@ def model_train(train_dataloader, val_dataloader, config):
         # print(f'Epoch: {epoch:02d}, Loss: {loss:.4f}, Train: {100 * train_acc:.2f}%, Valid: {100 * valid_acc:.2f}%')
     return model
 
-def model_test(dataset, model, config, train_dataset, val_dataset):
+def model_test(model, test_dataloader):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    # If you use GPU, the device should be cuda
-    print('Device: {}'.format(device))
+    #TODO fix putting thing on device
     #data = dataset.to(device)
     #split_idx = dataset.get_idx_split()
     #model = ST_GAT(in_channels=dataset.shape[1::], out_channels=dataset.shape[1::])
@@ -107,7 +107,7 @@ def model_test(dataset, model, config, train_dataset, val_dataset):
     train_rmse, train_mae, train_mape = eval(model, device, train_dataset)
     valid_rmse, valid_mae, valid_mape = eval(model, device, val_dataset)
     test_rmse, test_mae, test_mape = eval(model, device, dataset)
-    #train_acc, valid_acc, test_acc = eval(model, data, split_idx) 
+    #train_acc, valid_acc, test_acc = eval(model, data, split_idx)
 
     print(f'Test:, '
           f'Train RMSE: {100 * train_rmse:.2f}, '
