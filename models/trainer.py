@@ -1,7 +1,3 @@
-# @Time     : 11/12/21
-# @Author   : Julie Wang
-# @FileName : trainer.py
-
 import torch
 import torch.optim as optim
 from tqdm import tqdm
@@ -47,6 +43,18 @@ def eval(model, device, dataloader, type=''):
     #get the average score for each metric in each batch
     return rmse, mae, mape
 
+def train(model, device, train_dataloader, optimizer, loss_fn, epoch):
+    model.train()
+    for _, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
+        batch = batch.to(device)
+        optimizer.zero_grad()
+        y_pred = torch.squeeze(model(batch, device))
+        loss = loss_fn()(y_pred.float(), torch.squeeze(batch.y).float())
+        writer.add_scalar("Loss/train", loss, epoch)
+        loss.backward()
+        optimizer.step()
+
+    return loss
 
 def model_train(train_dataloader, val_dataloader, config, device):
     """
@@ -58,21 +66,12 @@ def model_train(train_dataloader, val_dataloader, config, device):
     optimizer = optim.Adam(model.parameters(), lr=config['C_INITIAL_LR'], weight_decay=config['C_WEIGHT_DECAY'])
     loss_fn = torch.nn.MSELoss
 
-    model.train()
     model.to(device)
 
     # For every epoch, train the model on training dataset. Evaluate model on validation dataset
     for epoch in range(config['C_EPOCHS']):
-        for _, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
-            batch = batch.to(device)
-            optimizer.zero_grad()
-            y_pred = torch.squeeze(model(batch, device))
-            loss = loss_fn()(y_pred.float(), torch.squeeze(batch.y).float())
-            writer.add_scalar("Loss/train", loss, epoch)
-            loss.backward()
-            optimizer.step()
-
-        if epoch % 1 == 0:
+        loss = train(model, device, train_dataloader, optimizer, loss_fn, epoch)
+        if epoch % 5 == 0:
             print(f"Epoch {epoch}, loss: {loss}")
             train_mae, train_rmse, train_mape = eval(model, device, train_dataloader, 'Train')
             val_mae, val_rmse, val_mape = eval(model, device, val_dataloader, 'Valid')

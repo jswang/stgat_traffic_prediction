@@ -8,14 +8,14 @@ from shutil import copyfile
 from utils.math_utils import *
 
 def weight_matrix(file_path, sigma2=0.1, epsilon=0.5, scaling=True):
-    '''
+    """
     Load weight matrix function.
     :param file_path: str, the path of saved weight matrix file.
     :param sigma2: float, scalar of matrix W.
     :param epsilon: float, thresholds to control the sparsity of matrix W.
     :param scaling: bool, whether applies numerical scaling on W.
     :return: np.ndarray, [n_node, n_node].
-    '''
+    """
     W = pd.read_csv(file_path, header=None).values
 
     # check whether W is a 0/1 matrix.
