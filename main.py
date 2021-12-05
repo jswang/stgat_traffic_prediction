@@ -21,29 +21,27 @@ def parse_args():
     parser.add_argument('--n_hist', type=int, default=12)
     parser.add_argument('--n_pred', type=int, default=9)
     parser.add_argument('--batch_size', type=int, default=50)
-    parser.add_argument('--epoch', type=int, default=50)
-    parser.add_argument('--save', type=int, default=10)
-    parser.add_argument('--lr', type=float, default=1e-3)
-    parser.add_argument('--opt', type=str, default='RMSProp')
     parser.add_argument('--graph', type=str, default='PeMSD7_W_228', help='Graph name defaults to PeMSD7_W_228')
     parser.add_argument('--graph_data', type=str, default='PeMSD7_V_228', help='Graph dataset name defaults to PeMSD7_V_228')
     parser.add_argument('--inf_mode', type=str, default='merge')
 
     return parser.parse_args()
 
-# Constant config to use througout
-config = {
-    'C_BATCH_SIZE': 50,
-    'C_EPOCHS': 150,
-    'C_WEIGHT_DECAY': 5e-4,
-    'C_INITIAL_LR': 2e-4
-}
-
 def main():
     """
     Main function to train and test a model.
     """
     args = parse_args()
+
+    # Constant config to use througout
+    config = {
+        'C_BATCH_SIZE': args.batch_size,
+        'C_EPOCHS': 150,
+        'C_WEIGHT_DECAY': 5e-4,
+        'C_INITIAL_LR': 2e-4,
+        'N_PRED': args.n_pred,
+        'N_HIST': args.n_hist,
+    }
 
     # Get the train/val/test datasets
     dataset = TrafficDataset(args.n_hist, args.n_pred)
@@ -53,9 +51,7 @@ def main():
     test_dataloader = DataLoader(test, batch_size=args.batch_size, shuffle=True)
 
     # Configure and train model
-    config['n_pred'] = args.n_pred
-    config['n_hist'] = args.n_hist
-    config['n_node'] = dataset.n_node
+    config['N_NODE'] = dataset.n_node
     model = model_train(train_dataloader, val_dataloader, config)
 
     # Test Model

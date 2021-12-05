@@ -61,7 +61,7 @@ def model_train(train_dataloader, val_dataloader, config):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Make the model. Each datapoint in the graph is 228x12: N x F (N = # nodes, F = time window)
-    model = ST_GAT(in_channels=config['n_hist'], out_channels=config['n_pred'], num_nodes=config['n_node'])
+    model = ST_GAT(in_channels=config['N_HIST'], out_channels=config['N_PRED'], num_nodes=config['N_NODE'])
     optimizer = optim.Adam(model.parameters(), lr=config['C_INITIAL_LR'], weight_decay=config['C_WEIGHT_DECAY'])
     loss_fn = torch.nn.MSELoss
 
