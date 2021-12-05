@@ -34,8 +34,8 @@ def eval(model, device, dataloader, type=''):
                 pred = model(batch, device)
 
             truth = batch.y.view(pred.shape)
-            truth = un_z_score(truth, torch.mean(truth), torch.std(truth))
-            pred = un_z_score(pred, torch.mean(pred), torch.std(pred))
+            truth = z_score(truth, torch.mean(truth), torch.std(truth))
+            pred = z_score(pred, torch.mean(pred), torch.std(pred))
             rmse += RMSE(truth, pred)
             mae += MAE(truth, pred)
             mape += MAPE(truth, pred)

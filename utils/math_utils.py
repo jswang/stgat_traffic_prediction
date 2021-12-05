@@ -47,14 +47,16 @@ def un_z_score(x_normed, mean, std):
 
 def MAPE(v, v_):
     '''
-    Mean absolute percentage error.
+    Mean absolute percentage error.ß
     :param v: torch array, ground truth.
     :param v_: torch array, prediction.
     :return: torch scalar, MAPE averages on all elements of input.
     '''
     #return torch.mean(torch.abs(v_ - v) / (v + 1e-15))
     # make MAPE a percentage score; also include denominator inside absolute value to fit with the equation given in paper
-    return torch.mean(torch.abs((v_ - v)/ (v + 1) * 100))
+    #v = z_score(v, torch.mean(v), torch.std(v))
+    #v_ = z_score(v_, torch.mean(v_), torch.std(v_))
+    return torch.mean(torch.abs((v_ - v)) /(v + 1e-15) * 100)
 
 
 def RMSE(v, v_):
