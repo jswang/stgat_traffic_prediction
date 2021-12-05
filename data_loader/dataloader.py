@@ -53,7 +53,7 @@ class TrafficDataset():
             # (F,N) switched to (N,F)
             full_window = np.swapaxes(data[t:t+self.n_window, :], 0, 1)
             g.x = torch.FloatTensor(full_window[:, 0:n_hist])
-            # normalize the feature vectors using z-score with mean and std of x
+            # normalize the feature vectors using z-score with mean and std of x, according to paper
             g.x = z_score(g.x, torch.mean(g.x), torch.std(g.x))
             g.y = torch.FloatTensor(full_window[:, n_hist::])
             sequences += [g]
