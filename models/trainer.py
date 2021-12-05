@@ -28,7 +28,6 @@ def eval(model, device, dataloader, type=''):
     mape = 0
     n = 0
 
-
     # Evaluate model on all data
     for _, batch in enumerate(dataloader):
         batch = batch.to(device)
@@ -58,7 +57,7 @@ def model_train(train_dataloader, val_dataloader, config):
     """
 
     print("Training Model")
-    # Get GPU if you can
+    # Get GPU if you can TODO put dataset onto GPU?
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Make the model. Each datapoint in the graph is 228x12: N x F (N = # nodes, F = time window)

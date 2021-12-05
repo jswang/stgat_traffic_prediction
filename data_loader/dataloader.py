@@ -1,9 +1,10 @@
 import torch
 import numpy as np
-from torch_geometric.data import InMemoryDataset, Data
 import pandas as pd
 import os
+from torch_geometric.data import InMemoryDataset, Data
 from shutil import copyfile
+
 from utils.math_utils import *
 
 def weight_matrix(file_path, sigma2=0.1, epsilon=0.5, scaling=True):
@@ -39,8 +40,7 @@ class TrafficDataset(InMemoryDataset):
         self.n_hist = n_hist
         self.n_pred = n_pred
         super().__init__(root, transform, pre_transform)
-        self.data, self.slices = torch.load(self.processed_paths[1])
-        print("here")
+        self.data, self.slices, self.n_node = torch.load(self.processed_paths[1])
 
     @property
     def raw_file_names(self):
@@ -57,7 +57,8 @@ class TrafficDataset(InMemoryDataset):
 
     def process(self):
         """
-        Process the raw datasets into saved .pt dataset for later use
+        Process the raw datasets into saved .pt dataset for later use.
+        Note that any self.fields here wont exist if loading straight from the .pt file
         """
         # Load weighted adjacency matrix W, save it because it's been processed
         W = weight_matrix(self.raw_file_names[0])
@@ -69,18 +70,18 @@ class TrafficDataset(InMemoryDataset):
         # mean and std_dev from a large dataset
         data = z_score(data, np.mean(data), np.std(data))
 
-        self.n_datapoints, self.n_node = data.shape
-        self.n_window = self.n_hist + self.n_pred
+        n_datapoints, n_node = data.shape
+        n_window = self.n_hist + self.n_pred
         # The number of actual sequences you can make
-        n_sequences = self.n_datapoints - self.n_window + 1
+        n_sequences = n_datapoints - n_window + 1
 
         # manipulate nxn matrix into 2xnum_edges
-        edge_index = torch.zeros((2, self.n_node**2), dtype=torch.long)
+        edge_index = torch.zeros((2, n_node**2), dtype=torch.long)
         # create an edge_attr matrix with our weights  (num_edges x 1) --> our edge features are dim 1
-        edge_attr = torch.zeros((self.n_node**2, 1))
+        edge_attr = torch.zeros((n_node**2, 1))
         num_edges = 0
-        for i in range(self.n_node):
-            for j in range(self.n_node):
+        for i in range(n_node):
+            for j in range(n_node):
                 if W[i, j] != 0.:
                     edge_index[0, num_edges] = i
                     edge_index[1, num_edges] = j
@@ -96,25 +97,25 @@ class TrafficDataset(InMemoryDataset):
             # for each time point construct a different graph with data object
             # Docs here: https://pytorch-geometric.readthedocs.io/en/latest/modules/data.html#torch_geometric.data.Data
             g = Data()
-            g.__num_nodes__ = self.n_node
+            g.__num_nodes__ = n_node
 
             g.edge_index = edge_index
             g.edge_attr  = edge_attr
 
             # (F,N) switched to (N,F)
-            full_window = np.swapaxes(data[t:t+self.n_window, :], 0, 1)
+            full_window = np.swapaxes(data[t:t+n_window, :], 0, 1)
             g.x = torch.FloatTensor(full_window[:, 0:self.n_hist])
             g.y = torch.FloatTensor(full_window[:, self.n_hist::])
             sequences += [g]
 
         # Make the actual dataset
         data, slices = self.collate(sequences)
-        torch.save((data, slices), self.processed_paths[1])
+        torch.save((data, slices, n_node), self.processed_paths[1])
 
 def get_splits(dataset: TrafficDataset, splits):
     """
     Given the data, split it into random subsets of train, val, and test as given by splits
-    :param dataset: list to split
+    :param dataset: TrafficDataset object to split
     :param splits: (train, val, test) ratios
     """
     split_train, split_val, _ = splits

@@ -6,3 +6,6 @@ bin/
 *.zip
 default.npy
 runs/
+*.pt
+dataset/processed
+dataset/raw

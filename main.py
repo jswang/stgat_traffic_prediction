@@ -4,19 +4,13 @@
 # @Author   : Julie Wang
 # @FileName : main.py
 
+import argparse
 import os
-import numpy as np
-
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-from utils.math_utils import *
-# from data_loader.dataloader import TrafficDataset, get_splits
-from data_loader.new_dataloader import TrafficDataset, get_splits
+from data_loader.dataloader import TrafficDataset, get_splits
 from models.trainer import model_train, model_test
 from torch_geometric.loader import DataLoader
-
-import torch
-import argparse
 
 def parse_args():
     """

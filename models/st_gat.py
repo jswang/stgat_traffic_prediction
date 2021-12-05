@@ -1,9 +1,6 @@
-import tensorflow as tf
 import torch
 import torch.nn.functional as F
 from torch_geometric.nn import GATConv
-
-
 class ST_GAT(torch.nn.Module):
 
     def __init__(self, in_channels, out_channels, num_nodes, heads=8, dropout=0.6):
