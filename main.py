@@ -5,8 +5,7 @@
 # @FileName : main.py
 
 import argparse
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+import torch
 
 from data_loader.dataloader import TrafficDataset, get_splits
 from models.trainer import model_train, model_test
@@ -50,12 +49,16 @@ def main():
     val_dataloader = DataLoader(val, batch_size=args.batch_size, shuffle=True)
     test_dataloader = DataLoader(test, batch_size=args.batch_size, shuffle=True)
 
+    # Get gpu if you can
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f"Training using {device}")
+
     # Configure and train model
     config['N_NODE'] = dataset.n_node
-    model = model_train(train_dataloader, val_dataloader, config)
+    model = model_train(train_dataloader, val_dataloader, config, device)
 
     # Test Model
-    model_test(model, test_dataloader)
+    model_test(model, test_dataloader, device)
 
 if __name__ == "__main__":
     main()

@@ -31,7 +31,6 @@ def eval(model, device, dataloader, type=''):
     # Evaluate model on all data
     for _, batch in enumerate(dataloader):
         batch = batch.to(device)
-
         if batch.x.shape[0] == 1:
             pass
         else:
@@ -51,14 +50,12 @@ def eval(model, device, dataloader, type=''):
     return rmse, mae, mape
 
 
-def model_train(train_dataloader, val_dataloader, config):
+def model_train(train_dataloader, val_dataloader, config, device):
     """
     Train the ST-GAT model. Evaluate on validation dataset as you go.
     """
 
     print("Training Model")
-    # Get GPU if you can TODO put dataset onto GPU?
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Make the model. Each datapoint in the graph is 228x12: N x F (N = # nodes, F = time window)
     model = ST_GAT(in_channels=config['N_HIST'], out_channels=config['N_PRED'], num_nodes=config['N_NODE'])
@@ -95,6 +92,5 @@ def model_train(train_dataloader, val_dataloader, config):
 
     return model
 
-def model_test(model, test_dataloader):
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+def model_test(model, test_dataloader, device='cpu'):
     eval(model, device, test_dataloader, 'Test')
