@@ -25,7 +25,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     # F parameter
     parser.add_argument('--n_hist', type=int, default=12)
-    parser.add_argument('--n_pred', type=int, default=9)
+    parser.add_argument('--n_pred', type=int, default=12)
     parser.add_argument('--batch_size', type=int, default=50)
     parser.add_argument('--epoch', type=int, default=50)
     parser.add_argument('--save', type=int, default=10)
