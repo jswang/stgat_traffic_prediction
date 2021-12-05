@@ -5,7 +5,7 @@
 # @IDE      : PyCharm
 # @Github   : https://github.com/VeritasYin/Project_Orion
 
-import numpy as np
+import torch
 
 
 def z_score(x, mean, std):
@@ -39,17 +39,17 @@ def MAPE(v, v_):
     :param v_: np.ndarray or int, prediction.
     :return: int, MAPE averages on all elements of input.
     '''
-    return np.mean(np.abs(v_ - v) / (v + 1e-5))
+    return torch.mean(torch.abs(v_ - v) / (v + 1e-5))
 
 
 def RMSE(v, v_):
     '''
     Mean squared error.
-    :param v: np.ndarray or int, ground truth.
-    :param v_: np.ndarray or int, prediction.
-    :return: int, RMSE averages on all elements of input.
+    :param v: torch.ndarray or int, ground truth.
+    :param v_: torch.ndarray or int, prediction.
+    :return: int, RMSE averages on all elements of itorchut.
     '''
-    return np.sqrt(np.mean((v_ - v) ** 2))
+    return torch.sqrt(torch.mean((v_ - v) ** 2))
 
 
 def MAE(v, v_):
@@ -59,7 +59,7 @@ def MAE(v, v_):
     :param v_: np.ndarray or int, prediction.
     :return: int, MAE averages on all elements of input.
     '''
-    return np.mean(np.abs(v_ - v))
+    return torch.mean(torch.abs(v_ - v))
 
 
 def evaluation(y, y_, x_stats):
