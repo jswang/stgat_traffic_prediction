@@ -70,7 +70,7 @@ def model_train(train_dataloader, val_dataloader, config):
     loss_fn = torch.nn.MSELoss
 
     # For every epoch, train the model on training dataset. Evaluate model on validation dataset
-    for epoch in range(config['C_EPOCHS']):
+    for epoch in range(0,1):#config['C_EPOCHS']): # only do a couple of epochs for now to see what's happening
         loss = train(model, device, train_dataloader, optimizer, loss_fn)
         train_result = eval(model, device, train_dataloader)
         val_result = eval(model, device, val_dataloader)

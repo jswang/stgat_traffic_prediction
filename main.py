@@ -71,16 +71,16 @@ def main():
     dataset = TrafficDataset(data, W, args.n_hist, args.n_pred)
     # Transfrom the dataset into train, validation, and test
     (train, val, test) = get_splits(dataset, (0.6, 0.2, 0.2))
-    train_dataloader = DataLoader(train, batch_size=50, shuffle=True)
-    val_dataloader = DataLoader(val, batch_size=50, shuffle=True)
-    test_dataloader = DataLoader(test, batch_size=50, shuffle=True)
+    train_dataloader = DataLoader(train, batch_size=args.batch_size, shuffle=True)
+    val_dataloader = DataLoader(val, batch_size=args.batch_size, shuffle=True)
+    test_dataloader = DataLoader(test, batch_size=args.batch_size, shuffle=True)
     # Train model
     config['n_pred'] = args.n_pred
     config['n_hist'] = args.n_hist
     config['n_node'] = 228 #TODO parameterize this better
     model_train(train_dataloader, val_dataloader, config)
-    # Test model
-    model_test(test_dataloader, config)
+    # Test model  model_test(inputs, batch_size, n_his, n_pred, inf_mode, load_path='./output/models/'):
+    model_test(test_dataloader, batch_size=args.batch_size, n_his=args.n_hist, n_pred=args.n_pred, inf_mode=args.inf_mode)
 
 if __name__ == "__main__":
     main()
