@@ -36,23 +36,20 @@ class ST_GAT(torch.nn.Module):
 
         # RNN: 2 LSTM
         # incoming: x is (batchsize*num_nodes, seq_length), change into (batch_size, num_nodes, seq_length)
-        #x = torch.reshape(x, (data.num_graphs, int(data.num_nodes/data.num_graphs), data.num_features)) #TODO: should this be batch then nodes or nodes then batch?
+        x = torch.reshape(x, (data.num_graphs, int(data.num_nodes/data.num_graphs), 9)) #TODO: should this be batch then nodes or nodes then batch?
         # for lstm: x should be (seq_length, batch_size, num_nodes)
         # sequence length = 12, batch_size = 50, input_dim = 228
         
         #x = torch.reshape(x, (data.num_graphs, int(data.num_nodes/data.num_graphs), 9)) # also currently hard codeds
         
-        #x = torch.movedim(x, 2, 0)
+        x = torch.movedim(x, 2, 0)
         
-        #x, _ = self.lstm1(x)
-        #x, _ = self.lstm2(x)
+        x, _ = self.lstm1(x)
+        x, _ = self.lstm2(x)
 
         # final output layer, x coming in is 12,50,128.
-        # TODO: x going out should be?
-        #x = self.linear(x)
-
-        #x = torch.movedim(x, 2, 0)
-        #x = torch.movedim(x, 2, 1)
+        x = self.linear(x)
+        x = torch.reshape(x, (9, 50*228)).T
         
         return x
 
