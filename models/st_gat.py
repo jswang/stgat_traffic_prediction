@@ -23,16 +23,16 @@ class ST_GAT(torch.nn.Module):
             if 'bias' in name:
                 torch.nn.init.constant(param, 0.0)
             elif 'weight' in name:
-                torch.nn.init.xavier_normal(param)
+                torch.nn.init.xavier_uniform(param)
         self.lstm2 = torch.nn.LSTM(input_size=32, hidden_size=128, num_layers=1)
         for name, param in self.lstm1.named_parameters():
             if 'bias' in name:
                 torch.nn.init.constant(param, 0.0)
             elif 'weight' in name:
-                torch.nn.init.xavier_normal(param)
+                torch.nn.init.xavier_uniform(param)
         # fully-connected neural network
         self.linear = torch.nn.Linear(128, self.num_nodes)
-        torch.nn.init.xavier_normal(self.linear.weight)
+        torch.nn.init.xavier_uniform(self.linear.weight)
 
         self.bn2 = torch.nn.BatchNorm1d(9)
 
@@ -46,7 +46,7 @@ class ST_GAT(torch.nn.Module):
 
         # gat layer
         x = self.gat(x, edge_index)
-        x = self.bn1(x)
+        #x = self.bn1(x)
         x = F.dropout(x, self.dropout, training=self.training)
         x = F.log_softmax(x, dim=1)
         
@@ -73,6 +73,6 @@ class ST_GAT(torch.nn.Module):
         x = torch.movedim(x, 0, 2)
         s = x.shape
         x = torch.reshape(x, (s[0]*s[1], s[2]))
-        x  = self.bn2(x)
+        #x  = self.bn2(x)
 
         return x
