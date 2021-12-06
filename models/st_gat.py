@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch_geometric.nn import GATConv
 class ST_GAT(torch.nn.Module):
-    def __init__(self, in_channels, out_channels, num_nodes, heads=8, dropout=0.6):
+    def __init__(self, in_channels, out_channels, num_nodes, heads=8, dropout=0.5):
         super(ST_GAT, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -23,16 +23,16 @@ class ST_GAT(torch.nn.Module):
             if 'bias' in name:
                 torch.nn.init.constant(param, 0.0)
             elif 'weight' in name:
-                torch.nn.init.xavier_uniform(param)
+                torch.nn.init.xavier_uniform_(param)
         self.lstm2 = torch.nn.LSTM(input_size=32, hidden_size=128, num_layers=1)
         for name, param in self.lstm1.named_parameters():
             if 'bias' in name:
                 torch.nn.init.constant(param, 0.0)
             elif 'weight' in name:
-                torch.nn.init.xavier_uniform(param)
+                torch.nn.init.xavier_uniform_(param)
         # fully-connected neural network
         self.linear = torch.nn.Linear(128, self.num_nodes)
-        torch.nn.init.xavier_uniform(self.linear.weight)
+        torch.nn.init.xavier_uniform_(self.linear.weight)
 
         self.bn2 = torch.nn.BatchNorm1d(9)
 

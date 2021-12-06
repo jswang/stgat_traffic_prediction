@@ -82,5 +82,5 @@ def parse_traffic_data(ids, filename='../dataset/d07_text_station_5min_2012_05_0
 
     print("here")
 
-ids, W = generate_weight_matrix()
-parse_traffic_data([715898, 715900, 715903], '../dataset/test.txt')
+#ids, W = generate_weight_matrix()
+#parse_traffic_data([715898, 715900, 715903], '../dataset/test.txt')

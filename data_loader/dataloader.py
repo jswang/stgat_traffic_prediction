@@ -6,7 +6,7 @@ from torch_geometric.data import InMemoryDataset, Data
 from shutil import copyfile
 
 from utils.math_utils import *
-from import_data import distance_to_weight
+from data_loader.import_data import distance_to_weight
 
 def weight_matrix(file_path, sigma2=0.1, epsilon=0.5, scaling=True):
     """
