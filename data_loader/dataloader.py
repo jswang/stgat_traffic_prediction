@@ -6,6 +6,7 @@ from torch_geometric.data import InMemoryDataset, Data
 from shutil import copyfile
 
 from utils.math_utils import *
+from import_data import distance_to_weight
 
 def weight_matrix(file_path, sigma2=0.1, epsilon=0.5, scaling=True):
     """
@@ -61,7 +62,8 @@ class TrafficDataset(InMemoryDataset):
         Note that any self.fields here wont exist if loading straight from the .pt file
         """
         # Load weighted adjacency matrix W, save it because it's been processed
-        W = weight_matrix(self.raw_file_names[0])
+        distances = pd.read_csv(self.raw_file_names[0], header=None).values
+        W = distance_to_weight(distances, use_ints=False) # TODO Amelica, can change use_ints to True here to see difference
         torch.save(W, self.processed_paths[0])
 
         # Data Preprocessing and loading

@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns; sns.set()
 import matplotlib.pyplot as plt
+from datetime import datetime
+
 
 
 def haversine(lat1, lon1, lat2, lon2):
@@ -26,7 +28,7 @@ def visualize(data):
     plt.savefig("W.png", bbox_inches='tight', dpi=100)
     plt.show()
 
-def generate_weight_matrix(filename='./dataset/d07_text_meta_2012_05_02.txt'):
+def generate_weight_matrix(filename='../dataset/d07_text_meta_2012_05_02.txt'):
     df = pd.read_csv(filename, delimiter='\t')
     df = df[["ID", "Latitude", "Longitude"]].dropna()
     df_sample = df.sample(228, random_state=0)
@@ -69,9 +71,16 @@ def distance_to_weight(distances, sigma2=100, epsilon=0.5, use_ints=False):
 
     return W
 
-def parse_traffic_data(ids, filename='./dataset/d07_text_station_2012_05_01.txt'):
-    df = pd.read_csv(filename, delimiter=',', header=None)
-    df
+def parse_traffic_data(ids, filename='../dataset/d07_text_station_5min_2012_05_01.txt'):
+    df = pd.read_csv(filename, delimiter=',', header=None, usecols=[0, 1, 11])
+    # For every node, get all of the traffic points associated with it
+    for id in ids:
+        id_df = df.loc[df[1] == id]
+        times = id_df[0].to_numpy()
+        values = id_df[11].to_numpy()
+        datetime_object = [datetime.strptime(t, '/%Y %I:%M%p') for t in times]
+
+    print("here")
 
 ids, W = generate_weight_matrix()
-parse_traffic_data(ids)
+parse_traffic_data([715898, 715900, 715903], '../dataset/test.txt')
