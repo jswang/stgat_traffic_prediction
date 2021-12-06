@@ -40,7 +40,7 @@ class TrafficDataset(InMemoryDataset):
         self.n_hist = n_hist
         self.n_pred = n_pred
         super().__init__(root, transform, pre_transform)
-        self.data, self.slices, self.n_node = torch.load(self.processed_paths[1])
+        self.data, self.slices, self.n_node, self.mean, self.std_dev = torch.load(self.processed_paths[1])
 
     @property
     def raw_file_names(self):
@@ -68,6 +68,8 @@ class TrafficDataset(InMemoryDataset):
         data = pd.read_csv(self.raw_file_names[1], header=None).values
         # Technically using the validation and test datasets here, but it's fine, would normally get the
         # mean and std_dev from a large dataset
+        mean =  np.mean(data)
+        std_dev = np.std(data)
         data = z_score(data, np.mean(data), np.std(data))
 
         n_datapoints, n_node = data.shape
@@ -110,7 +112,7 @@ class TrafficDataset(InMemoryDataset):
 
         # Make the actual dataset
         data, slices = self.collate(sequences)
-        torch.save((data, slices, n_node), self.processed_paths[1])
+        torch.save((data, slices, n_node, mean, std_dev), self.processed_paths[1])
 
 def get_splits(dataset: TrafficDataset, splits):
     """
