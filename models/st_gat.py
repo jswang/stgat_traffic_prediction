@@ -75,7 +75,7 @@ class ST_GAT(torch.nn.Module):
         # Now reshape into final output
         s = x.shape
         # [50, 228*9] -> [50, 228, 9]
-        x = torch.reshape(x, (batch_size, self.n_nodes, self.n_pred))
+        x = torch.reshape(x, (s[0], self.n_nodes, self.n_pred))
         # [50, 228, 9] ->  [11400, 9]
-        x = torch.reshape(x, (batch_size*self.n_nodes, self.n_pred))
+        x = torch.reshape(x, (s[0]*self.n_nodes, self.n_pred))
         return x
