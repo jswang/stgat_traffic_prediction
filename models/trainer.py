@@ -23,7 +23,7 @@ def eval(model, device, dataloader, type=''):
     rmse = 0
     mape = 0
     n = 0
-
+    
     # Evaluate model on all data
     for _, batch in enumerate(dataloader):
         batch = batch.to(device)
@@ -34,8 +34,8 @@ def eval(model, device, dataloader, type=''):
                 pred = model(batch, device)
 
             truth = batch.y.view(pred.shape)
-            truth = z_score(truth, torch.mean(truth), torch.std(truth))
-            pred = z_score(pred, torch.mean(pred), torch.std(pred))
+            truth = un_z_score(truth, dataloader.dataset.mean, dataloader.dataset.std_dev)
+            pred = un_z_score(pred, dataloader.dataset.mean, dataloader.dataset.std_dev)
             rmse += RMSE(truth, pred)
             mae += MAE(truth, pred)
             mape += MAPE(truth, pred)
