@@ -6,6 +6,21 @@ from torch_geometric.data import InMemoryDataset, Data
 from shutil import copyfile
 
 from utils.math_utils import *
+
+def distance_to_weight(W, sigma2=0.1, epsilon=0.5, gat_version=False):
+    n = W.shape[0]
+    W = W / 10000.
+    W2, W_mask = W * W, np.ones([n, n]) - np.identity(n)
+    # refer to Eq.10
+    W = np.exp(-W2 / sigma2) * (np.exp(-W2 / sigma2) >= epsilon) * W_mask
+
+    # If using the gat version of this, round to 0/1 and include self loops
+    if gat_version:
+        W[W>0] = 1
+        W += np.identity(n)
+
+    return W
+
 class TrafficDataset(InMemoryDataset):
     def __init__(self, config, W, root='', transform=None, pre_transform=None):
         self.config = config

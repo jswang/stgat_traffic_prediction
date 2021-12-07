@@ -38,8 +38,6 @@ class ST_GAT(torch.nn.Module):
         self.linear = torch.nn.Linear(lstm2_hidden_size, self.n_nodes*self.n_pred)
         torch.nn.init.xavier_uniform_(self.linear.weight)
 
-
-
     def forward(self, data, device):
         x, edge_index = data.x, data.edge_index
         # apply dropout
