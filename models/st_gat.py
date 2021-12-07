@@ -51,7 +51,7 @@ class ST_GAT(torch.nn.Module):
         # gat layer
         x = self.gat(x, edge_index)
         #x = self.bn1(x)
-        x = F.dropout(x, self.dropout, training=self.training)
+        #x = F.dropout(x, self.dropout, training=self.training)
         x = F.log_softmax(x, dim=1)
 
         # output of gat: [11400, 12]
