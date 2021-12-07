@@ -80,13 +80,14 @@ def model_train(train_dataloader, val_dataloader, config, device):
 
             train_mae, train_rmse, train_mape = eval(model, device, train_dataloader, 'Train')
             val_mae, val_rmse, val_mape = eval(model, device, val_dataloader, 'Valid')
-            writer.add_scalar("MAE/train", train_mae, epoch)
-            writer.add_scalar("RMSE/train", train_rmse, epoch)
-            writer.add_scalar("MAPE/train", train_mape, epoch)
+            for i in range(1,4):
+                writer.add_scalar(f"MAE/train/{i*15}", train_mae[i-1], epoch)
+                writer.add_scalar(f"RMSE/train/{i*15}", train_rmse[i-1], epoch)
+                writer.add_scalar(f"MAPE/train/{i*15}", train_mape[i-1], epoch)
 
-            writer.add_scalar("MAE/val", val_mae, epoch)
-            writer.add_scalar("RMSE/val", val_rmse, epoch)
-            writer.add_scalar("MAPE/val", val_mape, epoch)
+                writer.add_scalar(f"MAE/val/{i*15}", val_mae[i-1], epoch)
+                writer.add_scalar(f"RMSE/val/{i*15}", val_rmse[i-1], epoch)
+                writer.add_scalar(f"MAPE/val/{i*15}", val_mape[i-1], epoch)
 
     writer.flush()
     # Save the model
