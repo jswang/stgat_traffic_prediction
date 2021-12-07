@@ -2,7 +2,18 @@ import torch
 import torch.nn.functional as F
 from torch_geometric.nn import GATConv
 class ST_GAT(torch.nn.Module):
+    """
+    Spatio-Temporal Graph Attention Network as presented in https://ieeexplore.ieee.org/document/8903252
+    """
     def __init__(self, in_channels, out_channels, n_nodes, heads=8, dropout=0.0):
+        """
+        Initialize the ST-GAT model
+        :param in_channels Number of input channels
+        :param out_channels Number of output channels
+        :param n_nodes Number of nodes in the graph
+        :param heads Number of attention heads to use in graph
+        :param dropout Dropout probability on output of Graph Attention Network
+        """
         super(ST_GAT, self).__init__()
         self.n_pred = out_channels
         self.heads = heads
@@ -15,7 +26,7 @@ class ST_GAT(torch.nn.Module):
 
         # single graph attentional layer with 8 attention heads
         self.gat = GATConv(in_channels=in_channels, out_channels=in_channels,
-            heads=heads, dropout=0, concat=False) # use the number of output channels equivalent to width of data for predictions (9)
+            heads=heads, dropout=0, concat=False)
 
         # self.bn1 = torch.nn.BatchNorm1d(in_channels)
         # self.bn2 = torch.nn.BatchNorm1d(self.n_preds)
@@ -39,6 +50,11 @@ class ST_GAT(torch.nn.Module):
         torch.nn.init.xavier_uniform_(self.linear.weight)
 
     def forward(self, data, device):
+        """
+        Forward pass of the ST-GAT model
+        :param data Data to make a pass on
+        :param device Device to operate on
+        """
         x, edge_index = data.x, data.edge_index
         # apply dropout
         if device == 'cpu':

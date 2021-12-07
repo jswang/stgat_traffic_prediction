@@ -15,6 +15,10 @@ writer = SummaryWriter()
 def eval(model, device, dataloader, type=''):
     """
     Evaluation function to evaluate model on data
+    :param model Model to evaluate
+    :param device Device to evaluate on
+    :param dataloader Data loader
+    :param type Name of evaluation type, e.g. Train/Val/Test
     """
     model.eval()
     model.to(device)
@@ -48,6 +52,15 @@ def eval(model, device, dataloader, type=''):
     return rmse, mae, mape
 
 def train(model, device, train_dataloader, optimizer, loss_fn, epoch):
+    """
+    Evaluation function to evaluate model on data
+    :param model Model to evaluate
+    :param device Device to evaluate on
+    :param train_dataloader Data loader
+    :param optimizer Optimizer to use
+    :param loss_fn Loss function
+    :param epoch Current epoch
+    """
     model.train()
     for _, batch in enumerate(tqdm(train_dataloader, desc=f"Epoch {epoch}")):
         batch = batch.to(device)
@@ -63,6 +76,10 @@ def train(model, device, train_dataloader, optimizer, loss_fn, epoch):
 def model_train(train_dataloader, val_dataloader, config, device):
     """
     Train the ST-GAT model. Evaluate on validation dataset as you go.
+    :param train_dataloader Data loader of training dataset
+    :param val_dataloader Dataloader of val dataset
+    :param config configuration to use
+    :param device Device to evaluate on
     """
 
     # Make the model. Each datapoint in the graph is 228x12: N x F (N = # nodes, F = time window)
@@ -99,13 +116,22 @@ def model_train(train_dataloader, val_dataloader, config, device):
     return model
 
 def model_test(model, test_dataloader, device):
+    """
+    Test the ST-GAT model
+    :param test_dataloader Data loader of test dataset
+    :param device Device to evaluate on
+    """
     eval(model, device, test_dataloader, 'Test')
 
 def load_from_checkpoint(checkpoint_path, config):
+    """
+    Load a model from the checkpoint
+    :param checkpoint_path Path to checkpoint
+    :param config Configuration to load model with
+    """
     model = ST_GAT(in_channels=config['N_HIST'], out_channels=config['N_PRED'], num_nodes=config['N_NODE'])
-
-    #checkpoint = torch.load(checkpoint_path)
-    #gitmodel.load_state_dict(checkpoint['model_state_dict'])
+    checkpoint = torch.load(checkpoint_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
 
     return model
 

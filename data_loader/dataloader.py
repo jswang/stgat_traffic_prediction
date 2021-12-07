@@ -8,6 +8,13 @@ from shutil import copyfile
 from utils.math_utils import *
 
 def distance_to_weight(W, sigma2=0.1, epsilon=0.5, gat_version=False):
+    """"
+    Given distances between all nodes, convert into a weight matrix
+    :param W distances
+    :param sigma2 User configurable parameter to adjust sparsity of matrix
+    :param epsilon User configurable parameter to adjust sparsity of matrix
+    :param gat_version If true, use 0/1 weights with self loops. Otherwise, use float
+    """
     n = W.shape[0]
     W = W / 10000.
     W2, W_mask = W * W, np.ones([n, n]) - np.identity(n)
@@ -22,6 +29,9 @@ def distance_to_weight(W, sigma2=0.1, epsilon=0.5, gat_version=False):
     return W
 
 class TrafficDataset(InMemoryDataset):
+    """
+    Dataset for Graph Neural Networks.
+    """
     def __init__(self, config, W, root='', transform=None, pre_transform=None):
         self.config = config
         self.W = W
@@ -100,6 +110,7 @@ def get_splits(dataset: TrafficDataset, n_slot, splits):
     """
     Given the data, split it into random subsets of train, val, and test as given by splits
     :param dataset: TrafficDataset object to split
+    :param n_slot: Number of possible sliding windows in a day
     :param splits: (train, val, test) ratios
     """
     split_train, split_val, _ = splits

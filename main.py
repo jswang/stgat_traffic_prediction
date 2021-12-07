@@ -59,10 +59,6 @@ def main():
     # Test Model
     model_test(model, test_dataloader, device)
 
-    # Example: Test using pretrained model
-    #trained_model = load_from_checkpoint('./runs/model_12-05-142102.pt', config)
-    #model_test(trained_model, test_dataloader, device)
-
 
 if __name__ == "__main__":
     main()
