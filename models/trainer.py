@@ -67,13 +67,13 @@ def model_train(train_dataloader, val_dataloader, config, device):
 
     # Make the model. Each datapoint in the graph is 228x12: N x F (N = # nodes, F = time window)
     model = ST_GAT(in_channels=config['N_HIST'], out_channels=config['N_PRED'], n_nodes=config['N_NODE'])
-    optimizer = optim.Adam(model.parameters(), lr=config['C_INITIAL_LR'], weight_decay=config['C_WEIGHT_DECAY'])
+    optimizer = optim.Adam(model.parameters(), lr=config['INITIAL_LR'], weight_decay=config['WEIGHT_DECAY'])
     loss_fn = torch.nn.MSELoss
 
     model.to(device)
 
     # For every epoch, train the model on training dataset. Evaluate model on validation dataset
-    for epoch in range(config['C_EPOCHS']):
+    for epoch in range(config['EPOCHS']):
         loss = train(model, device, train_dataloader, optimizer, loss_fn, epoch)
         print(f"Loss: {loss:.3f}")
         if epoch % 5 == 0:
@@ -96,7 +96,7 @@ def model_train(train_dataloader, val_dataloader, config, device):
             "model_state_dict": model.state_dict(),
             "optimizer_state_dict": optimizer.state_dict(),
             "loss": loss,
-            }, os.path.join(config["C_CHECKPOINT_DIR"], f"model_{timestr}.pt"))
+            }, os.path.join(config["CHECKPOINT_DIR"], f"model_{timestr}.pt"))
 
     return model
 

@@ -8,12 +8,9 @@ from shutil import copyfile
 from utils.math_utils import *
 from .import_data import distance_to_weight
 
-
-#Given the original data, come up with one big dataset.
 class TrafficDataset(InMemoryDataset):
-    def __init__(self, n_hist, n_pred, root='', transform=None, pre_transform=None):
-        self.n_hist = n_hist
-        self.n_pred = n_pred
+    def __init__(self, config, root='', transform=None, pre_transform=None):
+        self.config = config
         super().__init__(root, transform, pre_transform)
         self.data, self.slices, self.n_node, self.mean, self.std_dev = torch.load(self.processed_paths[1])
 
@@ -48,10 +45,8 @@ class TrafficDataset(InMemoryDataset):
         std_dev = np.std(data)
         data = z_score(data, np.mean(data), np.std(data))
 
-        n_datapoints, n_node = data.shape
-        n_window = self.n_hist + self.n_pred
-        # The number of actual sequences you can make
-        n_sequences = n_datapoints - n_window + 1
+        _, n_node = data.shape
+        n_window = self.config['N_PRED'] + self.config['N_HIST']
 
         # manipulate nxn matrix into 2xnum_edges
         edge_index = torch.zeros((2, n_node**2), dtype=torch.long)
@@ -71,35 +66,38 @@ class TrafficDataset(InMemoryDataset):
 
         sequences = []
         # T x F x N
-        for t in range(n_sequences):
-            # for each time point construct a different graph with data object
-            # Docs here: https://pytorch-geometric.readthedocs.io/en/latest/modules/data.html#torch_geometric.data.Data
-            g = Data()
-            g.__num_nodes__ = n_node
+        for i in range(self.config['N_DAYS']):
+            for j in range(self.config['N_SLOT']):
+                # for each time point construct a different graph with data object
+                # Docs here: https://pytorch-geometric.readthedocs.io/en/latest/modules/data.html#torch_geometric.data.Data
+                g = Data()
+                g.__num_nodes__ = n_node
 
-            g.edge_index = edge_index
-            g.edge_attr  = edge_attr
+                g.edge_index = edge_index
+                g.edge_attr  = edge_attr
 
-            # (F,N) switched to (N,F)
-            full_window = np.swapaxes(data[t:t+n_window, :], 0, 1)
-            g.x = torch.FloatTensor(full_window[:, 0:self.n_hist])
-            g.y = torch.FloatTensor(full_window[:, self.n_hist::])
-            sequences += [g]
+                # (F,N) switched to (N,F)
+                sta = i * self.config['N_DAY_SLOT'] + j
+                end = sta + n_window
+                # [21, 228]
+                full_window = np.swapaxes(data[sta:end, :], 0, 1)
+                g.x = torch.FloatTensor(full_window[:, 0:self.config['N_HIST']])
+                g.y = torch.FloatTensor(full_window[:, self.config['N_HIST']::])
+                sequences += [g]
 
         # Make the actual dataset
         data, slices = self.collate(sequences)
         torch.save((data, slices, n_node, mean, std_dev), self.processed_paths[1])
 
-def get_splits(dataset: TrafficDataset, splits):
+def get_splits(dataset: TrafficDataset, n_slot, splits):
     """
     Given the data, split it into random subsets of train, val, and test as given by splits
     :param dataset: TrafficDataset object to split
     :param splits: (train, val, test) ratios
     """
     split_train, split_val, _ = splits
-    dataset = dataset.shuffle()
-    i = int(split_train * len(dataset))
-    j = int(split_val * len(dataset))
+    i = n_slot*split_train
+    j = n_slot*split_val
     train = dataset[:i]
     val = dataset[i:i+j]
     test = dataset[i+j:]
