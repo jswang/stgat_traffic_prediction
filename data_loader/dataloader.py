@@ -9,8 +9,8 @@ from utils.math_utils import *
 class TrafficDataset(InMemoryDataset):
     def __init__(self, config, W, root='', transform=None, pre_transform=None):
         self.config = config
-        super().__init__(root, transform, pre_transform)
         self.W = W
+        super().__init__(root, transform, pre_transform)
         self.data, self.slices, self.n_node, self.mean, self.std_dev = torch.load(self.processed_paths[0])
 
     @property
