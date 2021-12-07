@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch_geometric.nn import GATConv
 class ST_GAT(torch.nn.Module):
-    def __init__(self, in_channels, out_channels, n_nodes, heads=8, dropout=0.0):
+    def __init__(self, in_channels, out_channels, n_nodes, heads=8, dropout=0.5):
         super(ST_GAT, self).__init__()
         self.n_pred = out_channels
         self.heads = heads
