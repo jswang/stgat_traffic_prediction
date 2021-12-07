@@ -34,7 +34,7 @@ class TrafficDataset(InMemoryDataset):
         """
         # Load weighted adjacency matrix W, save it because it's been processed
         distances = pd.read_csv(self.raw_file_names[0], header=None).values
-        W = distance_to_weight(distances, use_ints=False) # TODO Amelia, can change use_ints to True here to see difference
+        W = distance_to_weight(distances, gat_version = True)
         torch.save(W, self.processed_paths[0])
 
         # Data Preprocessing and loading

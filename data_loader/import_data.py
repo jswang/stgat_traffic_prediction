@@ -48,25 +48,17 @@ def visualize(data):
     # return ids, W
 
 
-def distance_to_weight(distances, sigma2=100, epsilon=0.5, use_ints=False):
-    """
-    Load weight matrix function.
-    :param W: str, weight matrix
-    :param sigma2: float, scalar of matrix W.
-    :param epsilon: float, thresholds to control the sparsity of matrix W.
-    :param use_ints: bool, if True, rounds all weights to 0s and 1s
-    :return: np.ndarray, [n_node, n_node].
-    """
-    n = distances.shape[0]
-    mask = np.ones([n, n]) - np.identity(n)
-    # refer to Eq. 20 in Graph Attention Network
-    W = np.exp(-distances*distances / sigma2) * mask
-    W[W < epsilon] = 0
+def distance_to_weight(W, sigma2=0.1, epsilon=0.5, gat_version=False):
+    n = W.shape[0]
+    W = W / 10000.
+    W2, W_mask = W * W, np.ones([n, n]) - np.identity(n)
+    # refer to Eq.10
+    W = np.exp(-W2 / sigma2) * (np.exp(-W2 / sigma2) >= epsilon) * W_mask
 
-    if use_ints:
-      W[W>0] = 1
-      # Add self loop
-      W += np.identity(n)
+    # If using the gat version of this, round to 0/1 and include self loops
+    if gat_version:
+        W[W>0] = 1
+        W += np.identity(n)
 
     return W
 
@@ -86,8 +78,14 @@ def parse_traffic_data(ids, filename='./dataset/d07_text_station_5min_2012_05_01
         y[nans] = np.interp(x(nans), x(~nans), y[~nans])
 
 
+# distances = pd.read_csv('./dataset/PeMSD7_W_228.csv', header=None).values
+# W = distance_to_weight(distances, gat_version=False)
+# ax = sns.heatmap(W, cmap="YlGnBu")
+# plt.savefig("W.png", bbox_inches='tight', dpi=100)
+# plt.show()
 
-    print("here")
+# W = distance_to_weight(distances, gat_version=True)
+# ax = sns.heatmap(W, cmap="YlGnBu")
+# plt.savefig("W.png", bbox_inches='tight', dpi=100)
+# plt.show()
 
-# ids, W = generate_weight_matrix()
-# parse_traffic_data(ids)
