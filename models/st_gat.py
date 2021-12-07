@@ -8,35 +8,37 @@ class ST_GAT(torch.nn.Module):
         self.heads = heads
         self.dropout = dropout
         self.n_nodes = n_nodes
-
-        lstm1_hidden_size = 32
-        lstm2_hidden_size = 128
+        
+        self.n_preds = 9
+        lstm1_hidden_size = 64
+        lstm2_hidden_size = 256
 
         # single graph attentional layer with 8 attention heads
         self.gat = GATConv(in_channels=in_channels, out_channels=in_channels,
             heads=heads, dropout=self.dropout, concat=False) # use the number of output channels equivalent to width of data for predictions (9)
 
-        self.bn1  = torch.nn.BatchNorm1d(in_channels)
+        self.bn1 = torch.nn.BatchNorm1d(in_channels)
+        self.bn2 = torch.nn.BatchNorm1d(self.n_preds)
 
         # add two LSTM layers
         self.lstm1 = torch.nn.LSTM(input_size=self.n_nodes, hidden_size=lstm1_hidden_size, num_layers=1)
         for name, param in self.lstm1.named_parameters():
             if 'bias' in name:
-                torch.nn.init.constant(param, 0.0)
+                torch.nn.init.constant_(param, 0.0)
             elif 'weight' in name:
                 torch.nn.init.xavier_uniform_(param)
         self.lstm2 = torch.nn.LSTM(input_size=lstm1_hidden_size, hidden_size=lstm2_hidden_size, num_layers=1)
         for name, param in self.lstm1.named_parameters():
             if 'bias' in name:
-                torch.nn.init.constant(param, 0.0)
+                torch.nn.init.constant_(param, 0.0)
             elif 'weight' in name:
-                torch.nn.init.xavier_uniform(param)
+                torch.nn.init.xavier_uniform_(param)
 
         # fully-connected neural network
         self.linear = torch.nn.Linear(lstm2_hidden_size, self.n_nodes*self.n_pred)
         torch.nn.init.xavier_uniform_(self.linear.weight)
 
-        self.bn2 = torch.nn.BatchNorm1d(9)
+        
 
     def forward(self, data, device):
         x, edge_index = data.x, data.edge_index
