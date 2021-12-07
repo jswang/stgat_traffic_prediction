@@ -20,7 +20,7 @@ def main():
     # Constant config to use througout
     config = {
         'BATCH_SIZE': 50,
-        'EPOCHS': 150,
+        'EPOCHS': 200,
         'WEIGHT_DECAY': 5e-4,
         'INITIAL_LR': 2e-4,
         'CHECKPOINT_DIR': './runs',
