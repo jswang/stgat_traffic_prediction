@@ -20,11 +20,6 @@ def haversine(lat1, lon1, lat2, lon2):
 
     return R * c
 
-# TRACY: this is how you make the heatmap. can you modify the axes and title to clean it up?
-def visualize(data):
-    ax = sns.heatmap(data, annot=True)
-    plt.savefig("W.png", bbox_inches='tight', dpi=100)
-    plt.show()
 
 # def generate_weight_matrix(filename='./dataset/d07_text_meta_2012_05_02.txt'):
     # df = pd.read_csv(filename, delimiter='\t')
@@ -62,24 +57,36 @@ def distance_to_weight(W, sigma2=0.1, epsilon=0.5, gat_version=False):
 
     return W
 
-def nan_helper(y):
-    return np.isnan(y), lambda z: z.nonzero()[0]
+def distance_to_weight_former(distances, sigma2=100, epsilon=0.5, use_ints=False):
+    """
+    Load weight matrix function.
+    :param W: str, weight matrix
+    :param sigma2: float, scalar of matrix W.
+    :param epsilon: float, thresholds to control the sparsity of matrix W.
+    :param use_ints: bool, if True, rounds all weights to 0s and 1s
+    :return: np.ndarray, [n_node, n_node].
+    """
+    n = distances.shape[0]
+    mask = np.ones([n, n]) - np.identity(n)
+    # refer to Eq. 20 in Graph Attention Network
+    W = np.exp(-distances*distances / sigma2) * mask
+    W[W < epsilon] = 0
 
-def parse_traffic_data(ids, filename='./dataset/d07_text_station_5min_2012_05_01.txt'):
-    df = pd.read_csv(filename, delimiter=',', header=None, usecols=[0, 1, 11])
-    # For every node, get all of the traffic points associated with it
-    for id in ids:
-        id_df = df.loc[df[1] == id]
-        times = id_df[0].to_numpy()
-        y = id_df[11].to_numpy()
-        datetimes = [datetime.strptime(t, '%m/%d/%Y %H:%M:%S') for t in times]
-        # TODO check that datetimes are all 5 minutes apart
-        nans, x = nan_helper(y)
-        y[nans] = np.interp(x(nans), x(~nans), y[~nans])
+    if use_ints:
+      W[W>0] = 1
+      # Add self loop
+      W += np.identity(n)
+
+    return W
 
 
 # distances = pd.read_csv('./dataset/PeMSD7_W_228.csv', header=None).values
 # W = distance_to_weight(distances, gat_version=False)
+# ax = sns.heatmap(W, cmap="YlGnBu")
+# plt.savefig("W.png", bbox_inches='tight', dpi=100)
+# plt.show()
+
+# W = distance_to_weight_former(distances, sigma2=100, epsilon=0.5, use_ints=False)
 # ax = sns.heatmap(W, cmap="YlGnBu")
 # plt.savefig("W.png", bbox_inches='tight', dpi=100)
 # plt.show()

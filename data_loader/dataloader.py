@@ -6,25 +6,22 @@ from torch_geometric.data import InMemoryDataset, Data
 from shutil import copyfile
 
 from utils.math_utils import *
-from .import_data import distance_to_weight
-
 class TrafficDataset(InMemoryDataset):
-    def __init__(self, config, root='', transform=None, pre_transform=None):
+    def __init__(self, config, W, root='', transform=None, pre_transform=None):
         self.config = config
         super().__init__(root, transform, pre_transform)
-        self.data, self.slices, self.n_node, self.mean, self.std_dev = torch.load(self.processed_paths[1])
+        self.W = W
+        self.data, self.slices, self.n_node, self.mean, self.std_dev = torch.load(self.processed_paths[0])
 
     @property
     def raw_file_names(self):
-        return [os.path.join(self.raw_dir, 'PeMSD7_W_228.csv'), os.path.join(self.raw_dir, 'PeMSD7_V_228.csv')]
+        return [os.path.join(self.raw_dir, 'PeMSD7_V_228.csv')]
 
     @property
     def processed_file_names(self):
-        return ['./weight.pt', './data.pt']
+        return ['./data.pt']
 
     def download(self):
-        #TODO: need to implement for other data types
-        copyfile('./dataset/PeMSD7_W_228.csv', os.path.join(self.raw_dir, 'PeMSD7_W_228.csv'))
         copyfile('./dataset/PeMSD7_V_228.csv', os.path.join(self.raw_dir, 'PeMSD7_V_228.csv'))
 
     def process(self):
@@ -32,13 +29,8 @@ class TrafficDataset(InMemoryDataset):
         Process the raw datasets into saved .pt dataset for later use.
         Note that any self.fields here wont exist if loading straight from the .pt file
         """
-        # Load weighted adjacency matrix W, save it because it's been processed
-        distances = pd.read_csv(self.raw_file_names[0], header=None).values
-        W = distance_to_weight(distances, gat_version = True)
-        torch.save(W, self.processed_paths[0])
-
         # Data Preprocessing and loading
-        data = pd.read_csv(self.raw_file_names[1], header=None).values
+        data = pd.read_csv(self.raw_file_names[0], header=None).values
         # Technically using the validation and test datasets here, but it's fine, would normally get the
         # mean and std_dev from a large dataset
         mean =  np.mean(data)
@@ -55,10 +47,10 @@ class TrafficDataset(InMemoryDataset):
         num_edges = 0
         for i in range(n_node):
             for j in range(n_node):
-                if W[i, j] != 0.:
+                if self.W[i, j] != 0.:
                     edge_index[0, num_edges] = i
                     edge_index[1, num_edges] = j
-                    edge_attr[num_edges] = W[i, j]
+                    edge_attr[num_edges] = self.W[i, j]
                     num_edges += 1
         # using resize_ to just keep the first num_edges entries
         edge_index = edge_index.resize_(2, num_edges)
@@ -87,7 +79,7 @@ class TrafficDataset(InMemoryDataset):
 
         # Make the actual dataset
         data, slices = self.collate(sequences)
-        torch.save((data, slices, n_node, mean, std_dev), self.processed_paths[1])
+        torch.save((data, slices, n_node, mean, std_dev), self.processed_paths[0])
 
 def get_splits(dataset: TrafficDataset, n_slot, splits):
     """

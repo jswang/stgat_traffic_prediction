@@ -6,11 +6,12 @@
 
 import argparse
 import torch
+import pandas as pd
 
 from data_loader.dataloader import TrafficDataset, get_splits
 from models.trainer import load_from_checkpoint, model_train, model_test
 from torch_geometric.loader import DataLoader
-
+from data_loader.import_data import distance_to_weight
 
 def main():
     """
@@ -23,31 +24,36 @@ def main():
         'EPOCHS': 200,
         'WEIGHT_DECAY': 5e-4,
         'INITIAL_LR': 2e-4,
-        'CHECKPOINT_DIR': './runs',
+        'CHECKPOINT_DIR': '../runs',
         'N_PRED': 9,
         'N_HIST': 12,
         # number of possible 5 minute measurements per day
         'N_DAY_SLOT': 288,
         # number of days worth of data in the dataset
         'N_DAYS': 44,
+        # If false, use GCN paper weight matrix, if true, use GAT paper weight matrix
+        'USE_GAT_WEIGHTS': False
     }
     # Number of possible windows in a day
     config['N_SLOT']= config['N_DAY_SLOT'] - (config['N_PRED']+config['N_HIST']) + 1
 
-    # Get the train/val/test datasets
-    dataset = TrafficDataset(config)
+    # Load the weight matrix
+    distances = pd.read_csv('./dataset/PeMSD7_W_228.csv', header=None).values
+    W = distance_to_weight(distances, gat_version=config['USE_GAT_WEIGHTS'])
+    # Load the dataset
+    dataset = TrafficDataset(config, W)
 
     # total of 44 days in the dataset, use 34 for training, 5 for val, 5 for test
     train, val, test = get_splits(dataset, config['N_SLOT'], (34, 5, 5))
     train_dataloader = DataLoader(train, batch_size=config['BATCH_SIZE'], shuffle=True)
     val_dataloader = DataLoader(val, batch_size=config['BATCH_SIZE'], shuffle=True)
-    test_dataloader = DataLoader(test, batch_size=config['BATCH_SIZE'], shuffle=True)
+    test_dataloader = DataLoader(test, batch_size=config['BATCH_SIZE'], shuffle=False)
 
-    # # Get gpu if you can
+    # Get gpu if you can
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Using {device}")
 
-    # # Configure and train model
+    # Configure and train model
     config['N_NODE'] = dataset.n_node
     model = model_train(train_dataloader, val_dataloader, config, device)
 

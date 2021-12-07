@@ -19,9 +19,9 @@ def eval(model, device, dataloader, type=''):
     model.eval()
     model.to(device)
 
-    mae = torch.zeros(3, dtype=torch.float)
-    rmse = torch.zeros(3, dtype=torch.float)
-    mape = torch.zeros(3, dtype=torch.float)
+    mae = 0
+    rmse = 0
+    mape = 0
     n = 0
 
     # Evaluate model on all data
@@ -36,13 +36,13 @@ def eval(model, device, dataloader, type=''):
             truth = batch.y.view(pred.shape)
             truth = un_z_score(truth, dataloader.dataset.mean, dataloader.dataset.std_dev)
             pred = un_z_score(pred, dataloader.dataset.mean, dataloader.dataset.std_dev)
-            rmse += torch.tensor([RMSE(truth[0:3], pred[0:3]), RMSE(truth[0:6], pred[0:6]), RMSE(truth[0:9], pred[0:9])])
-            mae += torch.tensor([MAE(truth[0:3], pred[0:3]), MAE(truth[0:6], pred[0:6]), MAE(truth[0:9], pred[0:9])])
-            mape += torch.tensor([MAPE(truth[0:3], pred[0:3]), MAPE(truth[0:6], pred[0:6]), MAPE(truth[0:9], pred[0:9])])
+            rmse += RMSE(truth, pred)
+            mae += MAE(truth, pred)
+            mape += MAPE(truth, pred)
             n += 1
     rmse, mae, mape = rmse / n, mae / n, mape / n
 
-    print(f'{type}, MAE 15/30/45: {mae}, RMSE 15/30/45: {rmse}, MAPE 15/30/45: {mape}')
+    print(f'{type}, MAE: {mae}, RMSE: {rmse}, MAPE: {mape}')
 
     #get the average score for each metric in each batch
     return rmse, mae, mape
@@ -77,17 +77,14 @@ def model_train(train_dataloader, val_dataloader, config, device):
         loss = train(model, device, train_dataloader, optimizer, loss_fn, epoch)
         print(f"Loss: {loss:.3f}")
         if epoch % 5 == 0:
-
             train_mae, train_rmse, train_mape = eval(model, device, train_dataloader, 'Train')
             val_mae, val_rmse, val_mape = eval(model, device, val_dataloader, 'Valid')
-            for i in range(1,4):
-                writer.add_scalar(f"MAE/train/{i*15}", train_mae[i-1], epoch)
-                writer.add_scalar(f"RMSE/train/{i*15}", train_rmse[i-1], epoch)
-                writer.add_scalar(f"MAPE/train/{i*15}", train_mape[i-1], epoch)
-
-                writer.add_scalar(f"MAE/val/{i*15}", val_mae[i-1], epoch)
-                writer.add_scalar(f"RMSE/val/{i*15}", val_rmse[i-1], epoch)
-                writer.add_scalar(f"MAPE/val/{i*15}", val_mape[i-1], epoch)
+            writer.add_scalar(f"MAE/train", train_mae, epoch)
+            writer.add_scalar(f"RMSE/train", train_rmse, epoch)
+            writer.add_scalar(f"MAPE/train", train_mape, epoch)
+            writer.add_scalar(f"MAE/val", val_mae, epoch)
+            writer.add_scalar(f"RMSE/val", val_rmse, epoch)
+            writer.add_scalar(f"MAPE/val", val_mape, epoch)
 
     writer.flush()
     # Save the model
