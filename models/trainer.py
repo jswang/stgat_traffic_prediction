@@ -19,9 +19,9 @@ def eval(model, device, dataloader, type=''):
     model.eval()
     model.to(device)
 
-    mae = 0
-    rmse = 0
-    mape = 0
+    mae = torch.zeros(3, dtype=torch.float)
+    rmse = torch.zeros(3, dtype=torch.float)
+    mape = torch.zeros(3, dtype=torch.float)
     n = 0
 
     # Evaluate model on all data
@@ -36,13 +36,13 @@ def eval(model, device, dataloader, type=''):
             truth = batch.y.view(pred.shape)
             truth = un_z_score(truth, dataloader.dataset.mean, dataloader.dataset.std_dev)
             pred = un_z_score(pred, dataloader.dataset.mean, dataloader.dataset.std_dev)
-            rmse += RMSE(truth, pred)
-            mae += MAE(truth, pred)
-            mape += MAPE(truth, pred)
+            rmse += torch.tensor([RMSE(truth[0:3], pred[0:3]), RMSE(truth[0:6], pred[0:6]), RMSE(truth[0:9], pred[0:9])])
+            mae += torch.tensor([MAE(truth[0:3], pred[0:3]), MAE(truth[0:6], pred[0:6]), MAE(truth[0:9], pred[0:9])])
+            mape += torch.tensor([MAPE(truth[0:3], pred[0:3]), MAPE(truth[0:6], pred[0:6]), MAPE(truth[0:9], pred[0:9])])
             n += 1
     rmse, mae, mape = rmse / n, mae / n, mape / n
 
-    print(f'{type}, MAE: {mae:.3f}, RMSE: {rmse:.3f}, MAPE: {mape:.3f}')
+    print(f'{type}, MAE 15/30/45: {mae}, RMSE 15/30/45: {rmse}, MAPE 15/30/45: {mape}')
 
     #get the average score for each metric in each batch
     return rmse, mae, mape
