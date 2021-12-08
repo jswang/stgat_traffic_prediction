@@ -4,23 +4,23 @@ This repository provides an open source implementation of the Spatio-Temporal GA
 
 ## Running the code
 
-To activate an environment with appropriate packages you can run:
+We recommend creating and activating a virtual environment to run this repo. Use the following steps:
+```
+python3 -m venv env
+source env/bin/activate
+python3 -m pip install -r requirements.txt
+```
 
-`python3 -m venv env`.
-
-Then enter your virtual env using
-
-`source env/bin/activate`.
-
-Finally, if not already installed run our `requirements.txt` in your virtual environment: 
-
-`python3 -m pip install -r requirements.txt`.
-
-Then you should be able to get training running: check by running `python3 main.py`.
+To start training, simple run:
+```
+python3 main.py
+```
 
 We also provide `.launch` files in the `.vscode` folder for launching main through the python debugger.
 
 ## Folder structure
+
+Dataloading and preprocessed datasets are available in `data_loader` and `dataset`. The model is available in `models/st_gat.py`. Training functions are provided in `models/trainer.py`.
 ```
 ├── data_loader
 │   ├── dataloader.py
