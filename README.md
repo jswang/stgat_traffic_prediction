@@ -6,15 +6,15 @@ This repository provides an open source implementation of the Spatio-Temporal GA
 
 To activate an environment with appropriate packages you can run:
 
-`python3 -m venv env`
+`python3 -m venv env`.
 
-to set up a python virtual environment. Then enter your virtual env using
+Then enter your virtual env using
 
-`source env/bin/activate`
+`source env/bin/activate`.
 
-Finally, if not already installed run our requirements.txt in your virtua environment: 
+Finally, if not already installed run our `requirements.txt` in your virtual environment: 
 
-`python3 -m pip install -r requirements.txt`
+`python3 -m pip install -r requirements.txt`.
 
 Then you should be able to get training running: check by running `python3 main.py`.
 
