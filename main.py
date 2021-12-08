@@ -7,7 +7,7 @@
 import torch
 import pandas as pd
 
-from models.trainer import model_train, model_test
+from models.trainer import load_from_checkpoint, model_train, model_test
 from torch_geometric.loader import DataLoader
 from data_loader.dataloader import TrafficDataset, get_splits, distance_to_weight
 
@@ -31,7 +31,8 @@ def main():
         # number of days worth of data in the dataset
         'N_DAYS': 44,
         # If false, use GCN paper weight matrix, if true, use GAT paper weight matrix
-        'USE_GAT_WEIGHTS': True
+        'USE_GAT_WEIGHTS': True,
+        'N_NODE': 228,
     }
     # Number of possible windows in a day
     config['N_SLOT']= config['N_DAY_SLOT'] - (config['N_PRED']+config['N_HIST']) + 1
@@ -55,9 +56,10 @@ def main():
     # Configure and train model
     config['N_NODE'] = dataset.n_node
     model = model_train(train_dataloader, val_dataloader, config, device)
-
+    # Or, load from a saved checkpoint
+    # model = load_from_checkpoint('./runs/model_12-07-171618.pt', config)
     # Test Model
-    model_test(model, test_dataloader, device)
+    model_test(model, test_dataloader, device, config)
 
 
 if __name__ == "__main__":
