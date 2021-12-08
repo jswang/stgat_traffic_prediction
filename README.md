@@ -28,11 +28,12 @@ python3 main.py
 ├── runs
 │   ├── model_final_200epochs.pt
 │   └── model_final_60epochs.pt
-└── utils
+├── utils
 │   ├── __init__.py
 |   └── math_utils.py
 ├── main.py
-├── README.md
+├── requirements.txt
+└── README.md
 ```
 
 
