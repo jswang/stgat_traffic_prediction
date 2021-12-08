@@ -1,3 +1,0 @@
-d07_text_meta_2012_05_02.txt filter=lfs diff=lfs merge=lfs -text
-d07_text_station_5min_2012_05_01.txt filter=lfs diff=lfs merge=lfs -text
-d07_text_station_5min_2012_05_08.txt filter=lfs diff=lfs merge=lfs -text
