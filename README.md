@@ -3,15 +3,20 @@
 This repository provides an open source implementation of the Spatio-Temporal GAT introduced by Zhang et al in "Spatial-Temporal Graph Attention Networks:A Deep Learning Approach for Traffic Forecasting" https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8903252
 
 ## Running the code
-Install all required packages using
-```
-pip3 install requirements.txt
-```
 
-Run the main training and test loop using:
-```
-python3 main.py
-```
+To activate an environment with appropriate packages you can run:
+
+`python3 -m venv env`
+
+to set up a python virtual environment. Then enter your virtual env using
+
+`source env/bin/activate`
+
+Finally, if not already installed run our requirements.txt in your virtua environment: 
+
+`python3 -m pip install -r requirements.txt`
+
+Then you should be able to get training running: check by running `python3 main.py`.
 
 ## Folder structure
 ```
