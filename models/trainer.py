@@ -56,18 +56,18 @@ def eval(model, device, dataloader, type=''):
     #get the average score for each metric in each batch
     return rmse, mae, mape, y_pred, y_truth
 
-def train(model, device, train_dataloader, optimizer, loss_fn, epoch):
+def train(model, device, dataloader, optimizer, loss_fn, epoch):
     """
     Evaluation function to evaluate model on data
     :param model Model to evaluate
     :param device Device to evaluate on
-    :param train_dataloader Data loader
+    :param dataloader Data loader
     :param optimizer Optimizer to use
     :param loss_fn Loss function
     :param epoch Current epoch
     """
     model.train()
-    for _, batch in enumerate(tqdm(train_dataloader, desc=f"Epoch {epoch}")):
+    for _, batch in enumerate(tqdm(dataloader, desc=f"Epoch {epoch}")):
         batch = batch.to(device)
         optimizer.zero_grad()
         y_pred = torch.squeeze(model(batch, device))
