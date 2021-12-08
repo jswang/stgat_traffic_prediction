@@ -168,7 +168,7 @@ def load_from_checkpoint(checkpoint_path, config):
     :param config Configuration to load model with
     """
     model = ST_GAT(in_channels=config['N_HIST'], out_channels=config['N_PRED'], n_nodes=config['N_NODE'])
-    checkpoint = torch.load(checkpoint_path)
+    checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
     model.load_state_dict(checkpoint['model_state_dict'])
 
     return model

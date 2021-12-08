@@ -57,7 +57,7 @@ def main():
     config['N_NODE'] = dataset.n_node
     model = model_train(train_dataloader, val_dataloader, config, device)
     # Or, load from a saved checkpoint
-    # model = load_from_checkpoint('./runs/model_12-07-171618.pt', config)
+    # model = load_from_checkpoint('./runs/model_12-08-021825.pt', config)
     # Test Model
     model_test(model, test_dataloader, device, config)
 
