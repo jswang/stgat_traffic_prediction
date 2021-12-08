@@ -18,6 +18,8 @@ Finally, if not already installed run our `requirements.txt` in your virtual env
 
 Then you should be able to get training running: check by running `python3 main.py`.
 
+We also provide `.launch` files in the `.vscode` folder for launching main through the python debugger.
+
 ## Folder structure
 ```
 ├── data_loader
