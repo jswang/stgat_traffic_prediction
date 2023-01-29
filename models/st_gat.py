@@ -71,6 +71,7 @@ class ST_GAT(torch.nn.Module):
         # for lstm: x should be (seq_length, batch_size, n_nodes)
         # sequence length = 12, batch_size = 50, n_node = 228
         x = torch.movedim(x, 2, 0)
+        x = torch.movedim(x, 2, 1)
         # [12, 50, 228] -> [12, 50, 32]
         x, _ = self.lstm1(x)
         # [12, 50, 32] -> [12, 50, 128]
